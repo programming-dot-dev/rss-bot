@@ -17,3 +17,5 @@ PASSWORD="" // The bot password
 6. Open a terminal in the bot folder and run `npm install` to install dependendies and then `node main.js` to run the bot (whenever you want to start the bot again you can just do ctrl+c to interrupt the process and node main.js to start the bot)
 
 I recommend installing something like [forever.js](https://www.npmjs.com/package/forever) for making it run continually
+
+If you run into issues feel free to dm me on Matrix [here](https://matrix.to/#/@ategon:matrix.org)
