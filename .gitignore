@@ -1,0 +1,4 @@
+/.env
+/db.sqlite3
+/mega.sqlite3
+/node_modules
