@@ -85,7 +85,7 @@ const feeds = [
         url: 'https://godotengine.org/rss.xml',
         pinCategories: [
             { name: 'Release', days: 7 },
-            { name: 'Pre-Release', days: 7 },
+            { name: 'Pre-release', days: 7 },
         ],
     },
     {
@@ -142,13 +142,13 @@ const bot = new LemmyBot.LemmyBot({
                 // Pin post if its by the bot and set to be pinned
                 if (creator.name == process.env.USERNAME) {
                     // get link from db. If pin days > 0 then pin
-                    db.run(`SELECT * FROM posts WHERE link = ?`, [post.url], async (err, row) => {
+                    db.all(`SELECT * FROM posts WHERE link = ?`, [post.url], async (err, rows) => {
                         if (err) {
                             return console.error(err.message);
                         }
 
-                        if (row) {
-                            if (row.pin_days > 0) {
+                        if (rows.length > 0) {
+                            if (rows[0].featured) {
                                 // Pin post
                                 await featurePost({postId: post.id, featureType: "Community", featured: true})
                                 console.log(`${chalk.green('PINNED:')} Pinned ${post.name} in ${post.community_id} by ${creator.name}`)
@@ -170,7 +170,7 @@ const bot = new LemmyBot.LemmyBot({
                     for (const item of rss.items) {
                         let pin_days = 0;
                         // if has categories then see if it's a pin
-                        if (item.categories) {
+                        if (feed.pinCategories && item.categories) {
                             for (const category of item.categories) {
                                 const found_category = feed.pinCategories.find(c => c.name === category);
                                 if (found_category) {
@@ -193,7 +193,7 @@ const bot = new LemmyBot.LemmyBot({
                                 if (community.feeds.includes(feed.name)) {
                                     const communityId = await getCommunityId(community.slug)
                                     await createPost({
-                                        title: item.title,
+                                        name: item.title,
                                         body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
                                         url: item.link || undefined,
                                         community_id: communityId,
