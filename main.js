@@ -191,7 +191,7 @@ const bot = new LemmyBot.LemmyBot({
 
                             for (const community of communities) {
                                 if (community.feeds.includes(feed.name)) {
-                                    const communityId = await getCommunityId(community.slug)
+                                    const communityId = await getCommunityId({ name: community.slug, instance: community.instance })
                                     await createPost({
                                         name: item.title,
                                         body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
