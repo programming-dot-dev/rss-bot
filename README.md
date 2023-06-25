@@ -3,6 +3,10 @@ A lemmy bot that watches rss feeds and posts new posts from them in communities
 
 This bot is made for the https://programming.dev/ communities but the source code can be modified to accomodate any community
 
+## Notes
+- If running on windows the environment variables may act up. You can insert them manually into the bot by replacing the things like process.env.USERNAME and the other things starting with process.env with the value for username in .env or their other respective value
+- The lemmy bot api seems to not be able to connect to instances in the new lemmy v0.18 update (im looking for a fix)
+
 ## Setup
 1. Clone the repository
 2. Create an account in the instance you want the bot to have as its home (just make a regular user)
