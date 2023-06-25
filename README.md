@@ -17,8 +17,9 @@ USERNAME="" // The bot username
 PASSWORD="" // The bot password
 ```
 4. Change the data for the communities and feeds variables based on what you want set.
-5. **IMPORTANT:** If you do not want to bot to back post any other posts it finds in the rss feeds, the first time you start up the bot you have to comment out the lines where it calls createPost. When you start up the bot it will insert them all into the database so it doesnt post again but as the create post is commented out it doesnt make a post. You should see a bunch of things appearing in the logs about adding new links (and it may take up to 10 minutes for the cycle to get to a time where it wants to post to start doing that). Then when its done uncomment then start the bot up again and it should behave normally
-the lines to comment out should look like this and to comment out just use /* to start the comment and */ to end it
+5. **IMPORTANT:** If you do not want to bot to back post any other posts it finds in the rss feeds, the first time you start up the bot you have to comment out the lines where it calls createPost. When you start up the bot it will insert them all into the database so it doesnt post again but as the create post is commented out it doesnt make a post. You should see a bunch of things appearing in the logs about adding new links (and it may take up to 10 minutes for the cycle to get to a time where it wants to post to start doing that). Then when its done uncomment then start the bot up again and it should behave normally.
+ 
+The lines to comment out should look like this and to comment out just use /* to start the comment and */ to end it
 ```
 await createPost({
     name: item.title,
