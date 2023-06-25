@@ -5,7 +5,7 @@ This bot is made for the https://programming.dev/ communities but the source cod
 
 ## Notes
 - If running on windows the environment variables may act up. You can insert them manually into the bot by replacing the things like process.env.USERNAME and the other things starting with process.env with the value for username in .env or their other respective value
-- The lemmy bot api has not been updated for v0.18 so this bot will not work on v0.18 instances until thats done. Ill get it functioning at soon as its available
+- The lemmy bot api has not been updated for v0.18 so this bot will not work on v0.18 instances until thats done. Ill get it functioning as soon as its available
 
 
 ## Setup
