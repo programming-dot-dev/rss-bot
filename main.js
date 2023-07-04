@@ -204,6 +204,7 @@ const bot = new LemmyBot.LemmyBot({
                                         return;
                                     } else {
                                         return console.error(err.message);
+                                        console.log(`${chalk.green('ERROR:')} ${err.message}`);
                                     }
                                 }
                                 console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
