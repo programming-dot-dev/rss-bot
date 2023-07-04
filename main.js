@@ -167,6 +167,7 @@ const bot = new LemmyBot.LemmyBot({
         {
             cronExpression: '0 */10 * * * *',
             timezone: 'America/Phoenix',
+            runAtStart: true,
             doTask: async ({getCommunityId, createPost}) => {
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
