@@ -74,7 +74,7 @@ const communities = [
         ]
     },
     {
-        slug: 'localpolitics',
+        slug: 'tucsonpolitics',
         instance: 'tucson.social',
         feeds: [
             'localpolitics',
