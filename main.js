@@ -179,7 +179,7 @@ const bot = new LemmyBot.LemmyBot({
 
                     for (const item of rss.items) {
                         let pin_days = 0;
-                        const itemDate = new Date(item['dc:date']);
+                        const itemDate = new Date(item['dc:date'].trim());
                         console.log(`${chalk.green('ITEM DATE:')} ${itemDate}`);
 
                         //if item is newer than 6 months old, continue
