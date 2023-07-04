@@ -173,7 +173,7 @@ const bot = new LemmyBot.LemmyBot({
 
                     for (const item of rss.items) {
                         let pin_days = 0;
-                        const itemDate = new Date(item.dc:date);
+                        const itemDate = new Date(item['dc:date']);
                         const cutoffDate = new Date();
                         cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
 
