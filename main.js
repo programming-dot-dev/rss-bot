@@ -68,9 +68,6 @@ const communities = [
         instance: 'tucson.social',
         feeds: [
             'localnews',
-        ],
-        exclude: [
-            'localpolitics',
         ]
     },
     {
@@ -87,6 +84,9 @@ const feeds = [
         name: 'localnews',
         url: 'https://www.tucsonsentinel.com/local/rss/',
         content: 'description',
+        exclude: [
+            'localpolitics',
+        ]
     },
     {
         name: 'localpolitics',
@@ -177,69 +177,74 @@ const bot = new LemmyBot.LemmyBot({
                     cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
                     console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
 
-                    for (const item of rss.items) {
-                        let pin_days = 0;
-                        const itemDate = new Date(item['dc:date'].trim());
-                        console.log(`${chalk.green('ITEM DATE:')} ${itemDate}`);
+                    let excludeItems = [];
+                    console.log(`${chalk.green('FETCHING:')} exclusion feeds for ${feed.name}`);
 
-                        //if item is newer than 6 months old, continue
-                        if (itemDate > cutoffDate) { 
-                            console.log(`${chalk.green('RECENT:')} true`);
-                            console.log(`${chalk.green('LINK:')} ${item.link}`);
-                            // if has categories then see if it's a pin
-                            if (feed.pinCategories && item.categories) {
-                                for (const category of item.categories) {
-                                    const found_category = feed.pinCategories.find(c => c.name === category);
-                                    if (found_category) {
-                                        pin_days = found_category.days;
-                                    }
+                    // exclude feeds
+                    if (feed.exclude) {
+                        for (const excludeFeed of exclude) {
+                            if (feed.exclude.includes(excludeFeed.name)) {
+                                const excludeRss = await parser.parseURL(excludeFeed.url);
+                                for (const excludeItem of excludeRss.items) {
+                                    excludeItems.push(excludeItem.link);
                                 }
                             }
+                        }
+                    }
 
-                            db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
-                                if (err) {
-                                    if (err.message.includes('UNIQUE constraint failed')) {
-                                        // do nothing
-                                        console.log(`${chalk.green('PRESENT:')} ${item.link} already present`);
-                                        return;
-                                    } else {
-                                        return console.error(err.message);
-                                        console.log(`${chalk.green('ERROR:')} ${err.message}`);
+
+                    for (const item of rss.items) {
+                        if (!excludeItems.includes(item.link)) {
+                            let pin_days = 0;
+                            const itemDate = new Date(item['dc:date'].trim());
+                            console.log(`${chalk.green('ITEM DATE:')} ${itemDate}`);
+                            //if item is newer than 6 months old, continue
+                            if (itemDate > cutoffDate) { 
+                                console.log(`${chalk.green('RECENT:')} true`);
+                                console.log(`${chalk.green('LINK:')} ${item.link}`);
+                                // if has categories then see if it's a pin
+                                if (feed.pinCategories && item.categories) {
+                                    for (const category of item.categories) {
+                                        const found_category = feed.pinCategories.find(c => c.name === category);
+                                        if (found_category) {
+                                            pin_days = found_category.days;
+                                        }
                                     }
                                 }
-                                console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
 
-                                for (const community of communities) {
-                                    if (community.feeds.includes(feed.name)) {
-                                        let excludeItems = [];
+                                db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
+                                    if (err) {
+                                        if (err.message.includes('UNIQUE constraint failed')) {
+                                            // do nothing
+                                            console.log(`${chalk.green('PRESENT:')} ${item.link} already present`);
+                                            return;
+                                        } else {
+                                            return console.error(err.message);
+                                            console.log(`${chalk.green('ERROR:')} ${err.message}`);
+                                        }
+                                    }
+                                    console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
 
-                                        // If 'exclude' exists for the current community, parse its feeds and collect their items
-                                        if (community.exclude) {
-                                            console.log(`${chalk.green('FETCHING:')} exclude feeds for ${community.slug}`);
-                                            for (const excludeFeed of exclude) {
-                                                const excludeRss = await parser.parseURL(excludeFeed.url);
-                                                for (const excludeItem of excludeRss.items) {
-                                                    excludeItems.push(excludeItem.link);
-                                                }
+                                    for (const community of communities) {
+                                        if (community.feeds.includes(feed.name)) {
+
+                                            // Process the item only if its link is not in the excludeItems list
+                                            if (!excludeItems.includes(item.link)) {
+                                                console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
+                                                const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                                await createPost({
+                                                    name: item.title,
+                                                    body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                                    url: item.link || undefined,
+                                                    community_id: communityId,
+                                                });
                                             }
                                         }
-
-                                        // Process the item only if its link is not in the excludeItems list
-                                        if (!excludeItems.includes(item.link)) {
-                                            console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
-                                            const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
-                                            await createPost({
-                                                name: item.title,
-                                                body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                                url: item.link || undefined,
-                                                community_id: communityId,
-                                            });
-                                        }
                                     }
-                                }
-                                console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
-                            });
-                        
+                                    console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
+                                });
+                            
+                            }
                         }
                     
                     }
