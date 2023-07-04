@@ -240,8 +240,9 @@ const bot = new LemmyBot.LemmyBot({
                             });
                         
                         }
-                    console.log(`${chalk.green('COMPLETE:')} Feed ${feed.name} processed.`);
+                    
                     }
+                console.log(`${chalk.green('COMPLETE:')} Feed ${feed.name} processed.`);
                 }
             }
         },
