@@ -214,7 +214,7 @@ const bot = new LemmyBot.LemmyBot({
                                         let excludeItems = [];
 
                                         // If 'exclude' exists for the current community, parse its feeds and collect their items
-                                        if (community.exclude.includes(exclude.name)) {
+                                        if (community.exclude) {
                                             console.log(`${chalk.green('FETCHING:')} exclude feeds for ${community.slug}`);
                                             for (const excludeFeed of exclude) {
                                                 const excludeRss = await parser.parseURL(excludeFeed.url);
