@@ -238,6 +238,7 @@ const bot = new LemmyBot.LemmyBot({
                                 }
                                 console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
                             });
+                        console.log(`${chalk.green('COMPLETE:')} RSS FEED FETCHER.`);
                         }
                     }
                 }
