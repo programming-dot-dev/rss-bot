@@ -217,7 +217,7 @@ const bot = new LemmyBot.LemmyBot({
                                         if (community.exclude) {
                                             console.log(`${chalk.green('FETCHING:')} exclude feeds for ${community.slug}`);
                                             for (const excludeFeed of community.exclude) {
-                                                const excludeRss = await parser.parseURL(excludeFeed);
+                                                const excludeRss = await parser.parseURL(excludeFeed.url);
                                                 for (const excludeItem of excludeRss.items) {
                                                     excludeItems.push(excludeItem.link);
                                                 }
