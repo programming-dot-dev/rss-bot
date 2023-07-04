@@ -172,16 +172,19 @@ const bot = new LemmyBot.LemmyBot({
                 console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
+                    const cutoffDate = new Date();
+                    console.log(`${chalk.green('CURRENT DATE:')} ${cutoffDate}`);
+                    cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
+                    console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
 
                     for (const item of rss.items) {
                         let pin_days = 0;
                         const itemDate = new Date(item['dc:date']);
-                        const cutoffDate = new Date();
-                        console.log(`${chalk.green('CURRENT DATE:')} ${cutoffDate}`);
-                        cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
-                        console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
+                        console.log(`${chalk.green('ITEM DATE:')} ${cutoffDate}`);
+
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
+                            console.log(`${chalk.green('RECENT:')} true`);
                             // if has categories then see if it's a pin
                             if (feed.pinCategories && item.categories) {
                                 for (const category of item.categories) {
