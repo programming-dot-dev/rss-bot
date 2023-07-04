@@ -177,8 +177,9 @@ const bot = new LemmyBot.LemmyBot({
                         let pin_days = 0;
                         const itemDate = new Date(item['dc:date']);
                         const cutoffDate = new Date();
+                        console.log(`${chalk.green('CURRENT DATE:')} ${cutoffDate}`);
                         cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
-
+                        console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
                             // if has categories then see if it's a pin
@@ -200,6 +201,7 @@ const bot = new LemmyBot.LemmyBot({
                                         return console.error(err.message);
                                     }
                                 }
+                                console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
 
                                 for (const community of communities) {
                                     if (community.feeds.includes(feed.name)) {
@@ -207,6 +209,7 @@ const bot = new LemmyBot.LemmyBot({
 
                                         // If 'exclude' exists for the current community, parse its feeds and collect their items
                                         if (community.exclude) {
+                                            console.log(`${chalk.green('FETCHING:')} exlude feeds for ${community.slug}`);
                                             for (const excludeFeed of community.exclude) {
                                                 const excludeRss = await parser.parseURL(excludeFeed);
                                                 for (const excludeItem of excludeRss.items) {
@@ -217,6 +220,7 @@ const bot = new LemmyBot.LemmyBot({
 
                                         // Process the item only if its link is not in the excludeItems list
                                         if (!excludeItems.includes(item.link)) {
+                                            console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
                                             const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
                                             await createPost({
                                                 name: item.title,
