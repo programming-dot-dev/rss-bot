@@ -200,6 +200,7 @@ const bot = new LemmyBot.LemmyBot({
                                 if (err) {
                                     if (err.message.includes('UNIQUE constraint failed')) {
                                         // do nothing
+                                        console.log(`${chalk.green('PRESENT:')} ${item.link} already present`);
                                         return;
                                     } else {
                                         return console.error(err.message);
