@@ -169,6 +169,7 @@ const bot = new LemmyBot.LemmyBot({
             timezone: 'America/Phoenix',
             runAtStart: true,
             doTask: async ({getCommunityId, createPost}) => {
+                console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
 
