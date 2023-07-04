@@ -64,38 +64,42 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
 
 const communities = [
     {
-        slug: 'godot',
-        instance: 'programming.dev',
+        slug: 'localnews',
+        instance: 'tucson.social',
         feeds: [
-            'godot',
+            'localnews',
+        ],
+        exclude: [
+            'localpolitics',
         ]
     },
     {
-        slug: 'unreal_engine',
-        instance: 'programming.dev',
+        slug: 'localpolitics',
+        instance: 'tucson.social',
         feeds: [
-            'unreal',
+            'localpolitics',
         ]
     },
 ]
 
 const feeds = [
     {
-        name: 'godot',
-        url: 'https://godotengine.org/rss.xml',
-        pinCategories: [
-            { name: 'Release', days: 7 },
-            { name: 'Pre-release', days: 7 },
-        ],
+        name: 'localnews',
+        url: 'https://www.tucsonsentinel.com/local/rss/',
+        content: 'description',
     },
     {
-        name: 'unreal',
-        url: 'https://www.unrealengine.com/en-US/rss',
-        content: 'summary',
-    },
+        name: 'localpolitics',
+        url: 'https://www.tucsonsentinel.com/category/rss/politics/',
+        content: 'description',
+    }
+]
+
+const exclude = [
     {
-        name: 'unity',
-        url: 'https://blogs.unity3d.com/feed/',
+        name: 'localpolitics',
+        url: 'https://www.tucsonsentinel.com/category/rss/politics/',
+        content: 'description',
     }
 ]
 
@@ -162,7 +166,7 @@ const bot = new LemmyBot.LemmyBot({
     schedule: [
         {
             cronExpression: '0 */10 * * * *',
-            timezone: 'America/Toronto',
+            timezone: 'America/Phoenix',
             doTask: async ({getCommunityId, createPost}) => {
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
@@ -191,13 +195,28 @@ const bot = new LemmyBot.LemmyBot({
 
                             for (const community of communities) {
                                 if (community.feeds.includes(feed.name)) {
-                                    const communityId = await getCommunityId({ name: community.slug, instance: community.instance })
-                                    await createPost({
-                                        name: item.title,
-                                        body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                        url: item.link || undefined,
-                                        community_id: communityId,
-                                    });
+                                    let excludeItems = [];
+
+                                    // If 'exclude' exists for the current community, parse its feeds and collect their items
+                                    if (community.exclude) {
+                                        for (const excludeFeed of community.exclude) {
+                                            const excludeRss = await parser.parseURL(excludeFeed);
+                                            for (const excludeItem of excludeRss.items) {
+                                                excludeItems.push(excludeItem.link);
+                                            }
+                                        }
+                                    }
+
+                                    // Process the item only if its link is not in the excludeItems list
+                                    if (!excludeItems.includes(item.link)) {
+                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                        await createPost({
+                                            name: item.title,
+                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                            url: item.link || undefined,
+                                            community_id: communityId,
+                                        });
+                                    }
                                 }
                             }
                             console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
@@ -208,7 +227,7 @@ const bot = new LemmyBot.LemmyBot({
         },
         {
             cronExpression: '0 */5 * * * *',
-            timezone: 'America/Toronto',
+            timezone: 'America/Phoenix',
             doTask: async ({ featurePost }) => {
                 const now = addMinutes(new Date(), 30);
                 const day = now.getDay();
