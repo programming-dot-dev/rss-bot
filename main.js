@@ -185,6 +185,7 @@ const bot = new LemmyBot.LemmyBot({
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
                             console.log(`${chalk.green('RECENT:')} true`);
+                            console.log(`${chalk.green('LINK:')} ${item.link}`);
                             // if has categories then see if it's a pin
                             if (feed.pinCategories && item.categories) {
                                 for (const category of item.categories) {
@@ -212,7 +213,7 @@ const bot = new LemmyBot.LemmyBot({
 
                                         // If 'exclude' exists for the current community, parse its feeds and collect their items
                                         if (community.exclude) {
-                                            console.log(`${chalk.green('FETCHING:')} exlude feeds for ${community.slug}`);
+                                            console.log(`${chalk.green('FETCHING:')} exclude feeds for ${community.slug}`);
                                             for (const excludeFeed of community.exclude) {
                                                 const excludeRss = await parser.parseURL(excludeFeed);
                                                 for (const excludeItem of excludeRss.items) {
