@@ -156,10 +156,9 @@ const feeds = [
     },
     {
         name: 'thisistucson',
-        url: 'https://tucson.com/search/?f=rss&t=article&c=thisistucson&l=25&s=start_time&sd=desc',
+        url: 'https://thisistucson.com/search/?f=rss&t=article&c=thisistucson/todo&l=50&s=start_time&sd=desc',
         content: 'description',
         datefield: 'pubDate',
-        customDayLimit: 370, // the dummies have the year set incorrectly - so we need to set a custom day limit to get them to show up
     },
     { 
         name: 'tucsoncomsports',
