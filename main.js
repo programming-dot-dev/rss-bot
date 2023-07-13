@@ -247,7 +247,7 @@ const bot = new LemmyBot.LemmyBot({
                     
                     const cutoffDate = new Date();
                     console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
-                    cutoffDate.setDay(cutoffDate.getDay() - dayLimit);  // set to dayLimit days ago
+                    cutoffDate.setDate(cutoffDate.getDate() - dayLimit);  // set to dayLimit days ago
                     console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
                 
                     let joinedItems = [];
