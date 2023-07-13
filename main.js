@@ -79,11 +79,46 @@ const communities = [
     },
 ]
 
+// Feed data is stored in the following format: 
+// joinfeeds will only include posts in common between the source feed and those in the list - It is processed first.
+// exclude will remove posts from the feed based on the contents of another feed - It is processed second.
+// pinCategories will pin posts in the feed that match the category name and are within the specified number of days
+// content is the name of the field in the feed that contains the post content. Defaults to 'summary' if not specified
+// datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
+//
+// const feeds = [
+//     {
+//         name: 'feedname',
+//         url: 'https://www.some-news-site.com/category/rss/news/',
+//         content: 'description',
+//         exclude: [
+//             'feedname2',  // the feed contains posts from feedname2, which we don't want. So we exclude feedname2 to get feedname only.
+//         ],
+//         joinfeeds: [
+//             'feedname3', // the feed contains posts from feedname3, which we want. So we join feedname3 to get feedname and feedname3.
+//         ],
+//         pinCategories: [
+//             { name: 'categoryname', days: 7 }, // the feed contains posts from categoryname, which we want. So we pin categoryname posts from the feed.
+//         ]
+//     },
+//     { 
+//         name: 'feedname2',
+//         url: 'https://www.some-news-site.com/category/rss/politics/',
+//         content: 'content'
+//     },
+//     {
+//         name: 'feedname3',
+//         url: 'https://www.some-news-site.com/category/rss/localnews/',
+//         content: 'content'
+//     }
+// ]
+
 const feeds = [
     {
         name: 'localnews',
         url: 'https://www.tucsonsentinel.com/category/rss/local/',
         content: 'description',
+        datefield: 'dc:date',
         exclude: [
             'localpolitics',  // the local feed contains politics, which we don't want. So we exclude the localpolitics feed to get local news only.
         ]
@@ -92,10 +127,11 @@ const feeds = [
         name: 'localpolitics',
         url: 'https://www.tucsonsentinel.com/category/rss/politics/',
         content: 'description',
+        datefield: 'dc:date',
         joinfeeds: [
             'localnews', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
         ]
-    }
+    },
 ]
 
 const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
@@ -175,14 +211,14 @@ const bot = new LemmyBot.LemmyBot({
                     const rss = await parser.parseURL(feed.url);
                     
                     const cutoffDate = new Date();
-                    console.log(`${chalk.green('CURRENT DATE:')} ${cutoffDate}`);
+                    console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
                     cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
-                    console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
+                    console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
                 
                     let joinedItems = [];
                     // gather all items from feeds to be joined
                     if (feed.joinfeeds) {
-                        console.log(`${chalk.green('FETCHING:')} joining feeds for ${feed.name}`);
+                        console.log(`${chalk.white('FETCHING:')} joining feeds for ${feed.name}`);
                         for (const joinFeedName of feed.joinfeeds) {
                             const joinFeed = feeds.find(f => f.name === joinFeedName);
 
@@ -199,7 +235,7 @@ const bot = new LemmyBot.LemmyBot({
 
                     // exclude feeds
                     if (feed.exclude) {
-                        console.log(`${chalk.green('FETCHING:')} exclusion feeds for ${feed.name}`);
+                        console.log(`${chalk.white('FETCHING:')} exclusion feeds for ${feed.name}`);
                         for (const excludeFeedName of feed.exclude) {
                             const excludeFeed = feeds.find(f => f.name === excludeFeedName);
                     
@@ -217,12 +253,12 @@ const bot = new LemmyBot.LemmyBot({
 
                     for (const item of commonItems) {
                         let pin_days = 0;
-                        const itemDate = new Date(item['dc:date'].trim());
-                        console.log(`${chalk.green('ITEM DATE:')} ${itemDate}`);
+                        const itemDate = new Date((feed.datefield ? item[feed.datefield] : item.pubDate).trim());
+                        console.log(`${chalk.white('ITEM DATE:')} ${itemDate}`);
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
                             console.log(`${chalk.green('RECENT:')} true`);
-                            console.log(`${chalk.green('LINK:')} ${item.link}`);
+                            console.log(`${chalk.white('LINK:')} ${item.link}`);
                             // if has categories then see if it's a pin
                             if (feed.pinCategories && item.categories) {
                                 for (const category of item.categories) {
@@ -237,10 +273,9 @@ const bot = new LemmyBot.LemmyBot({
                                 if (err) {
                                     if (err.message.includes('UNIQUE constraint failed')) {
                                         // do nothing
-                                        console.log(`${chalk.green('PRESENT:')} ${item.link} already present`);
+                                        console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
                                         return;
                                     } else {
-                                        console.log(`${chalk.green('ERROR:')} ${err.message}`);
                                         return console.error(err.message);
                                     }
                                 }
@@ -248,19 +283,16 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const community of communities) {
                                     if (community.feeds.includes(feed.name)) {
-
-                                        // Process the item only if its link is not in the excludeItems list
-                                        if (!excludeItems.includes(item.link)) {
-                                            console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
-                                            const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
-                                            await createPost({
-                                                name: item.title,
-                                                body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                                url: item.link || undefined,
-                                                community_id: communityId,
-                                            });
-                                            await sleep(sleepDuration);
-                                        }
+                                        console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
+                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                        await createPost({
+                                            name: item.title,
+                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                            url: item.link || undefined,
+                                            community_id: communityId,
+                                        });
+                                        await sleep(sleepDuration);
+                                        
                                     }
                                 }
                                 console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
@@ -273,7 +305,7 @@ const bot = new LemmyBot.LemmyBot({
             }
         },
         {
-            cronExpression: '0 */45 * * * *',
+            cronExpression: '0 */15 * * * *',
             timezone: 'America/Phoenix',
             doTask: async ({ featurePost }) => {
                 const now = addMinutes(new Date(), 30);
