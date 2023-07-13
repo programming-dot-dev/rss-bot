@@ -76,6 +76,7 @@ const communities = [
         instance: 'tucson.social',
         feeds: [
             'tucsentinelpol',
+            'tucsoncompol',
         ]
     },
     {
