@@ -202,8 +202,9 @@ const bot = new LemmyBot.LemmyBot({
     },
     schedule: [
         {
-            cronExpression: '0 */10 * * * *',
-            timezone: 'America/Toronto',
+            cronExpression: '0 */30 * * * *',
+            timezone: 'America/Phoenix',
+            runAtStart: true,
             doTask: async ({getCommunityId, createPost}) => {
                 console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
@@ -304,8 +305,8 @@ const bot = new LemmyBot.LemmyBot({
             }
         },
         {
-            cronExpression: '0 */5 * * * *',
-            timezone: 'America/Toronto',
+            cronExpression: '0 */15 * * * *',
+            timezone: 'America/Phoenix',
             doTask: async ({ featurePost }) => {
                 const now = addMinutes(new Date(), 30);
                 const day = now.getDay();
