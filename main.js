@@ -86,6 +86,7 @@ const communities = [
 // exclude will remove posts from the feed based on the contents of another feed - It is processed second.
 // pinCategories will pin posts in the feed that match the category name and are within the specified number of days
 // content is the name of the field in the feed that contains the post content. Defaults to 'content' if not specified
+// datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
 //
 // const feeds = [
 //     {
@@ -120,6 +121,7 @@ const feeds = [
     {
         name: 'godot',
         url: 'https://godotengine.org/rss.xml',
+        datefield: 'pubDate',
         pinCategories: [
             { name: 'Release', days: 7 },
             { name: 'Pre-release', days: 7 },
@@ -129,10 +131,12 @@ const feeds = [
         name: 'unreal',
         url: 'https://www.unrealengine.com/en-US/rss',
         content: 'summary',
+        datefield: 'published',
     },
     {
         name: 'unity',
         url: 'https://blogs.unity3d.com/feed/',
+        datefield: 'pubDate',
     }
 ]
 
@@ -204,23 +208,22 @@ const bot = new LemmyBot.LemmyBot({
     },
     schedule: [
         {
-            cronExpression: '0 */30 * * * *',
-            timezone: 'America/Phoenix',
-            runAtStart: true,
+            cronExpression: '0 */5 * * * *',
+            timezone: 'America/Toronto',
             doTask: async ({getCommunityId, createPost}) => {
                 console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
                     
                     const cutoffDate = new Date();
-                    console.log(`${chalk.green('CURRENT DATE:')} ${cutoffDate}`);
+                    console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
                     cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
-                    console.log(`${chalk.green('CUTOFF DATE:')} ${cutoffDate}`);
+                    console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
                 
                     let joinedItems = [];
                     // gather all items from feeds to be joined
                     if (feed.joinfeeds) {
-                        console.log(`${chalk.green('FETCHING:')} joining feeds for ${feed.name}`);
+                        console.log(`${chalk.white('FETCHING:')} joining feeds for ${feed.name}`);
                         for (const joinFeedName of feed.joinfeeds) {
                             const joinFeed = feeds.find(f => f.name === joinFeedName);
 
@@ -237,7 +240,7 @@ const bot = new LemmyBot.LemmyBot({
 
                     // exclude feeds
                     if (feed.exclude) {
-                        console.log(`${chalk.green('FETCHING:')} exclusion feeds for ${feed.name}`);
+                        console.log(`${chalk.white('FETCHING:')} exclusion feeds for ${feed.name}`);
                         for (const excludeFeedName of feed.exclude) {
                             const excludeFeed = feeds.find(f => f.name === excludeFeedName);
                     
@@ -255,12 +258,12 @@ const bot = new LemmyBot.LemmyBot({
 
                     for (const item of commonItems) {
                         let pin_days = 0;
-                        const itemDate = new Date(item['dc:date'].trim());
-                        console.log(`${chalk.green('ITEM DATE:')} ${itemDate}`);
+                        const itemDate = new Date(item[feed.datefield].trim());
+                        console.log(`${chalk.white('ITEM DATE:')} ${itemDate}`);
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
                             console.log(`${chalk.green('RECENT:')} true`);
-                            console.log(`${chalk.green('LINK:')} ${item.link}`);
+                            console.log(`${chalk.white('LINK:')} ${item.link}`);
                             // if has categories then see if it's a pin
                             if (feed.pinCategories && item.categories) {
                                 for (const category of item.categories) {
@@ -275,10 +278,9 @@ const bot = new LemmyBot.LemmyBot({
                                 if (err) {
                                     if (err.message.includes('UNIQUE constraint failed')) {
                                         // do nothing
-                                        console.log(`${chalk.green('PRESENT:')} ${item.link} already present`);
+                                        console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
                                         return;
                                     } else {
-                                        console.log(`${chalk.green('ERROR:')} ${err.message}`);
                                         return console.error(err.message);
                                     }
                                 }
@@ -286,19 +288,16 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const community of communities) {
                                     if (community.feeds.includes(feed.name)) {
-
-                                        // Process the item only if its link is not in the excludeItems list
-                                        if (!excludeItems.includes(item.link)) {
-                                            console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
-                                            const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
-                                            await createPost({
-                                                name: item.title,
-                                                body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                                url: item.link || undefined,
-                                                community_id: communityId,
-                                            });
-                                            await sleep(sleepDuration);
-                                        }
+                                        console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
+                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                        await createPost({
+                                            name: item.title,
+                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                            url: item.link || undefined,
+                                            community_id: communityId,
+                                        });
+                                        await sleep(sleepDuration);
+                                        
                                     }
                                 }
                                 console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
@@ -311,8 +310,8 @@ const bot = new LemmyBot.LemmyBot({
             }
         },
         {
-            cronExpression: '0 */45 * * * *',
-            timezone: 'America/Phoenix',
+            cronExpression: '0 */5 * * * *',
+            timezone: 'America/Toronto',
             doTask: async ({ featurePost }) => {
                 const now = addMinutes(new Date(), 30);
                 const day = now.getDay();
