@@ -153,6 +153,20 @@ const feeds = [
         url: 'https://tucson.com/search/?f=rss&t=article&c=news/local*&l=25&s=start_time&sd=desc',
         content: 'description',
         datefield: 'pubDate',
+        exclude: [
+            'tucsoncompol',
+            'tucsoncomsubscribersonly',
+            'tucsoncomsports',
+        ]
+    },
+    {
+        name: 'tucsoncompol',
+        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local/government-politics&l=25&s=start_time&sd=desc',
+        content: 'description',
+        datefield: 'pubDate',
+        exclude: [
+            'tucsoncomsubscribersonly',
+        ]
     },
     {
         name: 'thisistucson',
@@ -165,7 +179,16 @@ const feeds = [
         url: 'https://tucson.com/search/?f=rss&t=article&c=sports/local&l=25&s=start_time&sd=desc',
         content: 'description',
         datefield: 'pubDate',
+        exclude: [
+            'tucsoncomsubscribersonly',
+        ]
     },
+    {
+        name: 'tucsoncomsubscribersonly',
+        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local/subscriber&l=25&s=start_time&sd=desc',
+        content: 'description',
+        datefield: 'pubDate',
+    }
 ]
 
 const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
