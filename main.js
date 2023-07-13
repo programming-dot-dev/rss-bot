@@ -208,7 +208,7 @@ const bot = new LemmyBot.LemmyBot({
     },
     schedule: [
         {
-            cronExpression: '0 */20 * * * *',
+            cronExpression: '0 */10 * * * *',
             timezone: 'America/Toronto',
             doTask: async ({getCommunityId, createPost}) => {
                 console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
