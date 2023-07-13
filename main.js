@@ -64,17 +64,17 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
 
 const communities = [
     {
-        slug: 'godot',
-        instance: 'programming.dev',
+        slug: 'localnews',
+        instance: 'tucson.social',
         feeds: [
-            'godot',
+            'localnews',
         ]
     },
     {
-        slug: 'unreal_engine',
-        instance: 'programming.dev',
+        slug: 'tucsonpolitics',
+        instance: 'tucson.social',
         feeds: [
-            'unreal',
+            'localpolitics',
         ]
     },
 ]
@@ -115,25 +115,23 @@ const communities = [
 
 const feeds = [
     {
-        name: 'godot',
-        url: 'https://godotengine.org/rss.xml',
-        datefield: 'pubDate',
-        pinCategories: [
-            { name: 'Release', days: 7 },
-            { name: 'Pre-release', days: 7 },
-        ],
+        name: 'localnews',
+        url: 'https://www.tucsonsentinel.com/category/rss/local/',
+        content: 'description',
+        datefield: 'dc:date',
+        exclude: [
+            'localpolitics',  // the local feed contains politics, which we don't want. So we exclude the localpolitics feed to get local news only.
+        ]
     },
     {
-        name: 'unreal',
-        url: 'https://www.unrealengine.com/en-US/rss',
-        content: 'summary',
-        datefield: 'published',
+        name: 'localpolitics',
+        url: 'https://www.tucsonsentinel.com/category/rss/politics/',
+        content: 'description',
+        datefield: 'dc:date',
+        joinfeeds: [
+            'localnews', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
+        ]
     },
-    {
-        name: 'unity',
-        url: 'https://blogs.unity3d.com/feed/',
-        datefield: 'pubDate',
-    }
 ]
 
 const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
