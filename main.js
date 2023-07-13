@@ -247,7 +247,7 @@ const bot = new LemmyBot.LemmyBot({
                     const rss = await parser.parseURL(feed.url);
                     // feed.customDayLimit ? feed.customDayLimit : daylimit
                     
-                    const dateOffset = (24*60*60*1000) * (feed.customDayLimit !== undefined ? feed.customDayLimit : daylimit);
+                    const dateOffset = (24*60*60*1000) * (feed.customDayLimit !== undefined ? feed.customDayLimit : dayLimit);
                     const cutoffDate = new Date();
                     console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
                     cutoffDate.setTime(cutoffDate.getTime() - dateOffset);  // set to dayLimit days ago via dateoffset
