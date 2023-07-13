@@ -83,7 +83,7 @@ const communities = [
 // joinfeeds will only include posts in common between the source feed and those in the list - It is processed first.
 // exclude will remove posts from the feed based on the contents of another feed - It is processed second.
 // pinCategories will pin posts in the feed that match the category name and are within the specified number of days
-// content is the name of the field in the feed that contains the post content. Defaults to 'content' if not specified
+// content is the name of the field in the feed that contains the post content. Defaults to 'summary' if not specified
 // datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
 //
 // const feeds = [
