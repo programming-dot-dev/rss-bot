@@ -254,7 +254,7 @@ const bot = new LemmyBot.LemmyBot({
 
                     for (const item of commonItems) {
                         let pin_days = 0;
-                        const itemDate = new Date(item[feed.datefield].trim());
+                        const itemDate = new Date((feed.datefield ? item[feed.datefield] : item.pubDate).trim());
                         console.log(`${chalk.white('ITEM DATE:')} ${itemDate}`);
                         //if item is newer than 6 months old, continue
                         if (itemDate > cutoffDate) { 
