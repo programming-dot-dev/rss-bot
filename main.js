@@ -79,10 +79,45 @@ const communities = [
     },
 ]
 
+// Feed data is stored in the following format: 
+// joinfeeds will only include posts in common between the source feed and those in the list - It is processed first.
+// exclude will remove posts from the feed based on the contents of another feed - It is processed second.
+// pinCategories will pin posts in the feed that match the category name and are within the specified number of days
+// content is the name of the field in the feed that contains the post content. Defaults to 'content' if not specified
+// datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
+//
+// const feeds = [
+//     {
+//         name: 'feedname',
+//         url: 'https://www.some-news-site.com/category/rss/news/',
+//         content: 'description',
+//         exclude: [
+//             'feedname2',  // the feed contains posts from feedname2, which we don't want. So we exclude feedname2 to get feedname only.
+//         ],
+//         joinfeeds: [
+//             'feedname3', // the feed contains posts from feedname3, which we want. So we join feedname3 to get feedname and feedname3.
+//         ],
+//         pinCategories: [
+//             { name: 'categoryname', days: 7 }, // the feed contains posts from categoryname, which we want. So we pin categoryname posts from the feed.
+//         ]
+//     },
+//     { 
+//         name: 'feedname2',
+//         url: 'https://www.some-news-site.com/category/rss/politics/',
+//         content: 'content'
+//     },
+//     {
+//         name: 'feedname3',
+//         url: 'https://www.some-news-site.com/category/rss/localnews/',
+//         content: 'content'
+//     }
+// ]
+
 const feeds = [
     {
         name: 'godot',
         url: 'https://godotengine.org/rss.xml',
+        datefield: 'pubDate',
         pinCategories: [
             { name: 'Release', days: 7 },
             { name: 'Pre-release', days: 7 },
@@ -92,12 +127,20 @@ const feeds = [
         name: 'unreal',
         url: 'https://www.unrealengine.com/en-US/rss',
         content: 'summary',
+        datefield: 'published',
     },
     {
         name: 'unity',
         url: 'https://blogs.unity3d.com/feed/',
+        datefield: 'pubDate',
     }
 ]
+
+const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // -----------------------------------------------------------------------------
 // Main Bot Code
@@ -164,45 +207,110 @@ const bot = new LemmyBot.LemmyBot({
             cronExpression: '0 */10 * * * *',
             timezone: 'America/Toronto',
             doTask: async ({getCommunityId, createPost}) => {
+                console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
+                    
+                    const cutoffDate = new Date();
+                    console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
+                    cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
+                    console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
+                
+                    let joinedItems = [];
+                    // gather all items from feeds to be joined
+                    if (feed.joinfeeds) {
+                        console.log(`${chalk.white('FETCHING:')} joining feeds for ${feed.name}`);
+                        for (const joinFeedName of feed.joinfeeds) {
+                            const joinFeed = feeds.find(f => f.name === joinFeedName);
 
-                    for (const item of rss.items) {
-                        let pin_days = 0;
-                        // if has categories then see if it's a pin
-                        if (feed.pinCategories && item.categories) {
-                            for (const category of item.categories) {
-                                const found_category = feed.pinCategories.find(c => c.name === category);
-                                if (found_category) {
-                                    pin_days = found_category.days;
+                            if (joinFeed) {
+                                const joinRss = await parser.parseURL(joinFeed.url);
+                                joinedItems = joinedItems.concat(joinRss.items);
+                            }
+                        }
+                    }
+                       
+
+                    let excludeItems = [];
+                    
+
+                    // exclude feeds
+                    if (feed.exclude) {
+                        console.log(`${chalk.white('FETCHING:')} exclusion feeds for ${feed.name}`);
+                        for (const excludeFeedName of feed.exclude) {
+                            const excludeFeed = feeds.find(f => f.name === excludeFeedName);
+                    
+                            if (excludeFeed) {
+                                const excludeRss = await parser.parseURL(excludeFeed.url);
+                                for (const excludeItem of excludeRss.items) {
+                                    excludeItems.push(excludeItem.link);
                                 }
                             }
                         }
-
-                        db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
-                            if (err) {
-                                if (err.message.includes('UNIQUE constraint failed')) {
-                                    // do nothing
-                                    return;
-                                } else {
-                                    return console.error(err.message);
-                                }
-                            }
-
-                            for (const community of communities) {
-                                if (community.feeds.includes(feed.name)) {
-                                    const communityId = await getCommunityId({ name: community.slug, instance: community.instance })
-                                    await createPost({
-                                        name: item.title,
-                                        body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                        url: item.link || undefined,
-                                        community_id: communityId,
-                                    });
-                                }
-                            }
-                            console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
-                        });
                     }
+
+                    let commonItems = rss.items.filter(item => {
+                        if (feed.joinfeeds && feed.exclude) {
+                            return joinedItems.map(i => i.link).includes(item.link) && !excludeItems.includes(item.link);
+                        } else if (feed.joinfeeds) {
+                            return joinedItems.map(i => i.link).includes(item.link);
+                        } else if (feed.exclude) {
+                            return !excludeItems.includes(item.link);
+                        } else {
+                            return true;
+                        }
+                    });
+
+                    for (const item of commonItems) {
+                        let pin_days = 0;
+                        const itemDate = new Date((feed.datefield ? item[feed.datefield] : item.pubDate).trim());
+                        console.log(`${chalk.white('ITEM DATE:')} ${itemDate}`);
+                        //if item is newer than 6 months old, continue
+                        if (itemDate > cutoffDate) { 
+                            console.log(`${chalk.green('RECENT:')} true`);
+                            console.log(`${chalk.white('LINK:')} ${item.link}`);
+                            // if has categories then see if it's a pin
+                            if (feed.pinCategories && item.categories) {
+                                for (const category of item.categories) {
+                                    const found_category = feed.pinCategories.find(c => c.name === category);
+                                    if (found_category) {
+                                        pin_days = found_category.days;
+                                    }
+                                }
+                            }
+
+                            db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
+                                if (err) {
+                                    if (err.message.includes('UNIQUE constraint failed')) {
+                                        // do nothing
+                                        console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
+                                        return;
+                                    } else {
+                                        return console.error(err.message);
+                                    }
+                                }
+                                console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
+
+                                for (const community of communities) {
+                                    if (community.feeds.includes(feed.name)) {
+                                        console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
+                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                        await createPost({
+                                            name: item.title,
+                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                            url: item.link || undefined,
+                                            community_id: communityId,
+                                        });
+                                        await sleep(sleepDuration);
+                                        
+                                    }
+                                }
+                                console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
+                            });
+                        }
+                    
+                    }
+                console.log(`${chalk.green('COMPLETE:')} Feed ${feed.name} processed.`);
                 }
             }
         },
