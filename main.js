@@ -249,8 +249,17 @@ const bot = new LemmyBot.LemmyBot({
                         }
                     }
 
-                    let commonItems = rss.items.filter(item => joinedItems.map(i => i.link).includes(item.link) && !excludeItems.includes(item.link));
-
+                    let commonItems = rss.items.filter(item => {
+                        if (feed.joinfeeds && feed.exclude) {
+                            return joinedItems.map(i => i.link).includes(item.link) && !excludeItems.includes(item.link);
+                        } else if (feed.joinfeeds) {
+                            return joinedItems.map(i => i.link).includes(item.link);
+                        } else if (feed.exclude) {
+                            return !excludeItems.includes(item.link);
+                        } else {
+                            return true;
+                        }
+                    });
 
                     for (const item of commonItems) {
                         let pin_days = 0;
