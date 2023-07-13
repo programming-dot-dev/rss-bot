@@ -61,40 +61,78 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
 
 // -----------------------------------------------------------------------------
 // Data
+// 
+
 
 const communities = [
     {
-        slug: 'localnews',
-        instance: 'tucson.social',
+        slug: 'godot',
+        instance: 'programming.dev',
         feeds: [
-            'localnews',
+            'godot',
         ]
     },
     {
-        slug: 'tucsonpolitics',
-        instance: 'tucson.social',
+        slug: 'unreal_engine',
+        instance: 'programming.dev',
         feeds: [
-            'localpolitics',
+            'unreal',
         ]
     },
 ]
 
+// Feed data is stored in the following format: 
+// joinfeeds will only include posts in common between the source feed and those in the list - It is processed first.
+// exclude will remove posts from the feed based on the contents of another feed - It is processed second.
+// pinCategories will pin posts in the feed that match the category name and are within the specified number of days
+// content is the name of the field in the feed that contains the post content. Defaults to 'content' if not specified
+//
+// const feeds = [
+//     {
+//         name: 'feedname',
+//         url: 'https://www.some-news-site.com/category/rss/news/',
+//         content: 'description',
+//         exclude: [
+//             'feedname2',  // the feed contains posts from feedname2, which we don't want. So we exclude feedname2 to get feedname only.
+//         ],
+//         joinfeeds: [
+//             'feedname3', // the feed contains posts from feedname3, which we want. So we join feedname3 to get feedname and feedname3.
+//         ],
+//         pinCategories: [
+//             { name: 'categoryname', days: 7 }, // the feed contains posts from categoryname, which we want. So we pin categoryname posts from the feed.
+//         ]
+//     },
+//     { 
+//         name: 'feedname2',
+//         url: 'https://www.some-news-site.com/category/rss/politics/',
+//         content: 'content'
+//     },
+//     {
+//         name: 'feedname3',
+//         url: 'https://www.some-news-site.com/category/rss/localnews/',
+//         content: 'content'
+//     }
+// ]
+//
+
+
 const feeds = [
     {
-        name: 'localnews',
-        url: 'https://www.tucsonsentinel.com/category/rss/local/',
-        content: 'description',
-        exclude: [
-            'localpolitics',  // the local feed contains politics, which we don't want. So we exclude the localpolitics feed to get local news only.
-        ]
+        name: 'godot',
+        url: 'https://godotengine.org/rss.xml',
+        pinCategories: [
+            { name: 'Release', days: 7 },
+            { name: 'Pre-release', days: 7 },
+        ],
     },
     {
-        name: 'localpolitics',
-        url: 'https://www.tucsonsentinel.com/category/rss/politics/',
-        content: 'description',
-        joinfeeds: [
-            'localnews', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
-        ]
+        name: 'unreal',
+        url: 'https://www.unrealengine.com/en-US/rss',
+        content: 'summary',
+    },
+    {
+        name: 'unity',
+        url: 'https://blogs.unity3d.com/feed/',
     }
 ]
 
