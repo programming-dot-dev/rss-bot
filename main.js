@@ -159,6 +159,7 @@ const feeds = [
         url: 'https://tucson.com/search/?f=rss&t=article&c=thisistucson&l=25&s=start_time&sd=desc',
         content: 'description',
         datefield: 'pubDate',
+        customDayLimit: 370, // the dummies have the year set incorrectly - so we need to set a custom day limit to get them to show up
     },
     { 
         name: 'tucsoncomsports',
@@ -244,12 +245,15 @@ const bot = new LemmyBot.LemmyBot({
                 console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
                 for (const feed of feeds) {
                     const rss = await parser.parseURL(feed.url);
+                    // feed.customDayLimit ? feed.customDayLimit : daylimit
                     
+                    const dateOffset = (24*60*60*1000) * (feed.customDayLimit !== undefined ? feed.customDayLimit : daylimit);
                     const cutoffDate = new Date();
                     console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
-                    cutoffDate.setDate(cutoffDate.getDate() - dayLimit);  // set to dayLimit days ago
+                    cutoffDate.setTime(cutoffDate.getTime() - dateOffset);  // set to dayLimit days ago via dateoffset
                     console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
-                
+
+
                     let joinedItems = [];
                     // gather all items from feeds to be joined
                     if (feed.joinfeeds) {
