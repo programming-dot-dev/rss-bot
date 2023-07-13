@@ -338,34 +338,34 @@ const bot = new LemmyBot.LemmyBot({
                                 }
                             }
 
-                            // db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
-                            //     if (err) {
-                            //         if (err.message.includes('UNIQUE constraint failed')) {
-                            //             // do nothing
-                            //             console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
-                            //             return;
-                            //         } else {
-                            //             return console.error(err.message);
-                            //         }
-                            //     }
-                            //     console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
+                            db.run(`INSERT INTO posts (link, pin_days, featured) VALUES (?, ?, ?)`, [item.link, pin_days, pin_days > 0 ? 1 : 0], async (err) => {
+                                if (err) {
+                                    if (err.message.includes('UNIQUE constraint failed')) {
+                                        // do nothing
+                                        console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
+                                        return;
+                                    } else {
+                                        return console.error(err.message);
+                                    }
+                                }
+                                console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
 
-                            //     for (const community of communities) {
-                            //         if (community.feeds.includes(feed.name)) {
-                            //             console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
-                            //             const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
-                            //             await createPost({
-                            //                 name: item.title,
-                            //                 body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                            //                 url: item.link || undefined,
-                            //                 community_id: communityId,
-                            //             });
-                            //             await sleep(sleepDuration);
+                                for (const community of communities) {
+                                    if (community.feeds.includes(feed.name)) {
+                                        console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
+                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
+                                        await createPost({
+                                            name: item.title,
+                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
+                                            url: item.link || undefined,
+                                            community_id: communityId,
+                                        });
+                                        await sleep(sleepDuration);
                                         
-                            //         }
-                            //     }
-                            //     console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
-                            // });
+                                    }
+                                }
+                                console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
+                            });
                         }
                     
                     }
