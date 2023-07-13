@@ -61,8 +61,6 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
 
 // -----------------------------------------------------------------------------
 // Data
-// 
-
 
 const communities = [
     {
@@ -114,8 +112,6 @@ const communities = [
 //         content: 'content'
 //     }
 // ]
-//
-
 
 const feeds = [
     {
