@@ -67,16 +67,31 @@ const communities = [
         slug: 'localnews',
         instance: 'tucson.social',
         feeds: [
-            'localnews',
+            'tucsentinellocal',
+            'tucsoncomlocal',
         ]
     },
     {
         slug: 'tucsonpolitics',
         instance: 'tucson.social',
         feeds: [
-            'localpolitics',
+            'tucsentinelpol',
         ]
     },
+    {
+        slug: 'localsports',
+        instance: 'tucson.social',
+        feeds: [
+            'tucsoncomsports',
+        ]
+    },
+    {
+        slug: 'home',
+        instance: 'tucson.social',
+        feeds: [
+            'thisistucson',
+        ]
+
 ]
 
 // Feed data is stored in the following format: 
@@ -115,26 +130,45 @@ const communities = [
 
 const feeds = [
     {
-        name: 'localnews',
+        name: 'tucsentinellocal',
         url: 'https://www.tucsonsentinel.com/category/rss/local/',
         content: 'description',
         datefield: 'dc:date',
         exclude: [
-            'localpolitics',  // the local feed contains politics, which we don't want. So we exclude the localpolitics feed to get local news only.
+            'tucsentinelpol',  // the local feed contains politics, which we don't want. So we exclude the tucsentinelpol feed to get local news only.
         ]
     },
     {
-        name: 'localpolitics',
+        name: 'tucsentinelpol',
         url: 'https://www.tucsonsentinel.com/category/rss/politics/',
         content: 'description',
         datefield: 'dc:date',
         joinfeeds: [
-            'localnews', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
+            'tucsentinellocal', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
         ]
+    },
+    {
+        name: 'tucsoncomlocal',
+        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local*&l=25&s=start_time&sd=desc',
+        content: 'description',
+        datefield: 'pubDate',
+    },
+    {
+        name: 'thisistucson',
+        url: 'https://tucson.com/search/?f=rss&t=article&c=thisistucson&l=25&s=start_time&sd=desc',
+        content: 'description',
+        datefield: 'pubDate',
+    },
+    { 
+        name: 'tucsoncomsports',
+        url: 'https://tucson.com/search/?f=rss&t=article&c=sports/local&l=25&s=start_time&sd=desc',
+        content: 'description',
+        datefield: 'pubDate',
     },
 ]
 
 const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
+const dayLimit = process.env.DAY_LIMIT || 7;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -212,7 +246,7 @@ const bot = new LemmyBot.LemmyBot({
                     
                     const cutoffDate = new Date();
                     console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
-                    cutoffDate.setMonth(cutoffDate.getMonth() - 6);  // set to 6 months ago
+                    cutoffDate.setDay(cutoffDate.getDay() - dayLimit);  // set to dayLimit days ago
                     console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
                 
                     let joinedItems = [];
