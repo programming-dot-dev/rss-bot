@@ -82,7 +82,7 @@ const communities = [
 const feeds = [
     {
         name: 'localnews',
-        url: 'https://www.tucsonsentinel.com/local/rss/',
+        url: 'https://www.tucsonsentinel.com/category/rss/local/',
         content: 'description',
         exclude: [
             'localpolitics',  // the local feed contains politics, which we don't want. So we exclude the localpolitics feed to get local news only.
