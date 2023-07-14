@@ -225,15 +225,18 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const [instance, communities] of Object.entries(instances)) {
                                     for (const [community, value] of Object.entries(communities)) {
-                                        if (value.feeds.includes(feed.name)) {
-                                            console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community }`);
+                                        if (Object.values(value).includes(name)) {
+                                            console.log(`${chalk.grey('CREATING:')} post for link ${item.link} in ${community }`);
                                             const communityId = await getCommunityId({ name: community, instance: instance });
+
+                                            let title = item.title;
+                                            title = parseTags(title);
 
                                             let body = ((feed.content && feed.content === 'summary') ? item.summary : item.content);
                                             body = parseTags(body);
 
                                             await createPost({
-                                                name: item.title,
+                                                name: title,
                                                 body: body,
                                                 url: item.link || undefined,
                                                 community_id: communityId,
@@ -242,7 +245,6 @@ const bot = new LemmyBot.LemmyBot({
                                         }
                                     }
                                 }
-                                console.log(`${chalk.gray('POSTED:')} ${item.link} and pinned for ${pin_days} days`);
                             });
                         }
                     
@@ -310,6 +312,14 @@ const bot = new LemmyBot.LemmyBot({
 let tags = {
     '<em>': '**',
     '</em>': '**',
+    '<p>': '',
+    '</p>': '',
+    '<strong>': '**',
+    '</strong>': '**',
+    '<br>': '\n',
+    '<br/>': '\n',
+    '<br />': '\n',
+    '&nbsp;': ' ',
 }
 
 function parseTags(input) {
