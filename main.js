@@ -235,12 +235,16 @@ const bot = new LemmyBot.LemmyBot({
                                             let body = ((feed.content && feed.content === 'summary') ? item.summary : item.content);
                                             body = parseTags(body);
 
-                                            await createPost({
-                                                name: title,
-                                                body: body,
-                                                url: item.link || undefined,
-                                                community_id: communityId,
-                                            });
+                                            try {
+                                                await createPost({
+                                                    name: title,
+                                                    body: body,
+                                                    url: item.link || undefined,
+                                                    community_id: communityId,
+                                                });
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
                                             await sleep(sleepDuration);
                                         }
                                     }
