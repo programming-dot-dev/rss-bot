@@ -11,7 +11,9 @@
   "dependencies": {
     "chalk": "^5.2.0",
     "dotenv": "^16.3.1",
-    "lemmy-bot": "^0.3.9",
+    "fs": "^0.0.1-security",
+    "js-yaml": "^4.1.0",
+    "lemmy-bot": "^0.4.5",
     "rss-parser": "^3.13.0",
     "sqlite3": "^5.1.6"
   },
