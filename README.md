@@ -3,6 +3,9 @@ A lemmy bot that watches rss feeds and posts new posts from them in communities
 
 This bot is made for the https://programming.dev/ communities but the source code can be modified to accomodate any community
 
+## Prerequisites
+- You need to have installed node.js in order to run the bot
+
 ## Notes
 - If running on windows the environment variables may act up. You can insert them manually into the bot by replacing the things like process.env.USERNAME and the other things starting with process.env with the value for username in .env or their other respective value
 
