@@ -13,7 +13,7 @@ let parser = new Parser({
 });
 console.log(`${chalk.magenta('STARTED:')} Started Bot`)
 
-let { instances, feeds, markAsBot, postCheckInterval, dayCheckInterval, timezone, dayCutOff, stopPosts } = load(readFileSync('config.yaml', 'utf8'));
+let { instances, feeds, markAsBot, postCheckInterval, dayCheckInterval, timezone, dayCutOff, stopPosts, showLogs } = load(readFileSync('config.yaml', 'utf8'));
 
 markAsBot = markAsBot ?? true;
 postCheckInterval = postCheckInterval ?? 10;
@@ -21,9 +21,16 @@ dayCheckInterval = dayCheckInterval ?? 10;
 timezone = timezone ?? 'America/Toronto';
 dayCutOff = dayCutOff ?? 7;
 stopPosts = stopPosts ?? false;
+showLogs = showLogs ?? false;
 
-console.log(`${chalk.grey('INSTANCES:')} ${Object.keys(instances).length} instances loaded.`)
-console.log(`${chalk.grey('FEEDS:')} ${Object.keys(feeds).length} feeds loaded.`)
+log(`${chalk.grey('INSTANCES:')} ${Object.keys(instances).length} instances loaded.`)
+log(`${chalk.grey('FEEDS:')} ${Object.keys(feeds).length} feeds loaded.`)
+
+function log(message) {
+    if (showLogs) {
+        console.log(message);
+    }
+}
 
 // -----------------------------------------------------------------------------
 // Databases
@@ -32,7 +39,7 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
     if (err) {
         return console.error(err.message);
     }
-    console.log(`${chalk.green('DB:')} Connected to the database.`);
+    log(`${chalk.green('DB:')} Connected to the database.`);
 
     db.run(`CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +51,7 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
         if (err) {
             return console.error(err.message);
         }
-        console.log(`${chalk.grey('TABLE:')} Loaded posts table.`);
+        log(`${chalk.grey('TABLE:')} Loaded posts table.`);
     });
 
     db.run(`CREATE TABLE IF NOT EXISTS time (
@@ -54,7 +61,7 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
         if (err) {
             return console.error(err.message);
         }
-        console.log(`${chalk.grey('TABLE:')} Loaded time table`);
+        log(`${chalk.grey('TABLE:')} Loaded time table`);
 
         db.run(`INSERT OR IGNORE INTO time (key, value) VALUES ('day', 0)`, (err) => {
             if (err) {
@@ -69,7 +76,7 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
             return console.error(err.message);
         }
 
-        console.log(`${chalk.grey('POSTS:')} ${rows[0].count} posts in database.`)
+        log(`${chalk.grey('POSTS:')} ${rows[0].count} posts in database.`)
     });
 });
 
@@ -125,7 +132,7 @@ const bot = new LemmyBot.LemmyBot({
                             if (rows[0].featured) {
                                 // Pin post
                                 await featurePost({postId: post.id, featureType: "Community", featured: true})
-                                console.log(`${chalk.green('PINNED:')} Pinned ${post.name} in ${post.community_id} by ${creator.name}`)
+                                log(`${chalk.green('PINNED:')} Pinned ${post.name} in ${post.community_id} by ${creator.name}`)
 
                                 // Update post in db
                                 db.run(`UPDATE posts SET post_id = ? WHERE link = ?`, [post.id, post.url], (err) => {
@@ -146,7 +153,7 @@ const bot = new LemmyBot.LemmyBot({
             cronExpression: `0 */${postCheckInterval} * * * *`,
             timezone: timezone,
             doTask: async ({getCommunityId, createPost}) => {
-                console.log(`${chalk.cyan('STARTED:')} RSS Feed Fetcher.`);
+                log(`${chalk.cyan('STARTED:')} RSS Feed Fetcher.`);
                 for (const [name, feed] of Object.entries(feeds)) {
                     const rss = await parser.parseURL(feed.url);
 
@@ -156,7 +163,7 @@ const bot = new LemmyBot.LemmyBot({
                     let joinedItems = [];
                     // gather all items from feeds to be joined
                     if (feed.joinfeeds) {
-                        console.log(`${chalk.grey('FETCHING:')} joining feeds for ${name}`);
+                        log(`${chalk.grey('FETCHING:')} joining feeds for ${name}`);
                         for (const joinFeedName of feed.joinfeeds) {
                             const joinFeed = Object.entries(feeds).find(f => f[0] === joinFeedName);
 
@@ -170,7 +177,7 @@ const bot = new LemmyBot.LemmyBot({
                     let excludeItems = [];
                     // exclude feeds
                     if (feed.exclude) {
-                        console.log(`${chalk.grey('FETCHING:')} exclusion feeds for ${name}`);
+                        log(`${chalk.grey('FETCHING:')} exclusion feeds for ${name}`);
                         for (const excludeFeedName of feed.exclude) {
                             const excludeFeed = Object.entries(feeds).find(f => f[0] === excludeFeedName);
                     
@@ -219,14 +226,14 @@ const bot = new LemmyBot.LemmyBot({
                                         return console.error(err.message);
                                     }
                                 }
-                                console.log(`${chalk.yellow('INSERTED:')} ${item.link} into database.`);
+                                log(`${chalk.yellow('INSERTED:')} ${item.link} into database.`);
 
                                 if (stopPosts) return;
 
                                 for (const [instance, communities] of Object.entries(instances)) {
                                     for (const [community, value] of Object.entries(communities)) {
                                         if (Object.values(value).includes(name)) {
-                                            console.log(`${chalk.grey('CREATING:')} post for link ${item.link} in ${community }`);
+                                            log(`${chalk.grey('CREATING:')} post for link ${item.link} in ${community }`);
                                             const communityId = await getCommunityId({ name: community, instance: instance });
 
                                             let title = item.title;
@@ -253,7 +260,7 @@ const bot = new LemmyBot.LemmyBot({
                         }
                     
                     }
-                    console.log(`${chalk.green('COMPLETE:')} Feed ${name} processed.`);
+                    log(`${chalk.green('COMPLETE:')} Feed ${name} processed.`);
                 }
             }
         },
@@ -276,14 +283,14 @@ const bot = new LemmyBot.LemmyBot({
                             }
                         });
 
-                        console.log(`${chalk.magenta('TIME:')} Updated day to ${day}`);
+                        log(`${chalk.magenta('TIME:')} Updated day to ${day}`);
                         // decrement all post times by 1
                         db.run(`UPDATE posts SET pin_days = pin_days - 1 WHERE featured = 1`, (err) => {
                             if (err) {
                                 return console.error(err.message);
                             }
 
-                            console.log(`${chalk.magenta('TIME:')} Decremented all post times`);
+                            log(`${chalk.magenta('TIME:')} Decremented all post times`);
 
                             // get all posts with 0 days left and unpin them
                             db.all(`SELECT * FROM posts WHERE pin_days = 0 && featured = 1`, async (err, rows) => {
@@ -293,7 +300,7 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const row of rows) {
                                     await featurePost({postId: row.post_id, featureType: "Community", featured: false})
-                                    console.log(`${chalk.green('UNFEATURED:')} Unfeatured ${row.post_id}`);
+                                    log(`${chalk.green('UNFEATURED:')} Unfeatured ${row.post_id}`);
                                 }
 
                                 // set all posts with 0 days left to unfeatured
@@ -302,7 +309,7 @@ const bot = new LemmyBot.LemmyBot({
                                         return console.error(err.message);
                                     }
 
-                                    console.log(`${chalk.magenta('TIME:')} Unfeatured all posts with 0 days left`);
+                                    log(`${chalk.magenta('TIME:')} Unfeatured all posts with 0 days left`);
                                 });
                             });
                         });

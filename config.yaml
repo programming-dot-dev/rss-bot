@@ -20,6 +20,10 @@ dayCutOff: 7
 # dont want any old posts posted when the bot is first ran. Set to false to post normally
 stopPosts: false
 
+# Set to true if you want to see log messages. False if not
+# (Note I cant control log messages sent by the bot library so those will still show. Just ones thrown by the bot wont)
+showLogs: false
+
 
 # ------------------------------------------------------------------------------
 
