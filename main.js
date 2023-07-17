@@ -343,21 +343,40 @@ let tags = {
     '<li>': '- ',
     '</li>': '',
     '<ul>': '',
-    '</ul>': '',
+    '</ul>': '\n',
     '&nbsp;': ' ',
 }
 
 function parseTags(input) {
     let output = input;
     for (const [key, value] of Object.entries(tags)) {
-        output = output.replace(key, value);
+        output = output.replaceAll(key, value);
     }
 
-    // Fix links
-    output = output.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)');
+    // Fix Links
+    const linkRegex = /<a href="([^"]+)">([^<]+)<\/a>/g;
+    let match;
+    match = linkRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], `[${match[2]}](${match[1]})`);
+        match = linkRegex.exec(output);
+    }
+
+    // Fix Links target black
+    const linkTargetRegex = /<a href="([^"]+)" target="_blank">([^<]+)<\/a>/g;
+    match = linkTargetRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], `[${match[2]}](${match[1]})`);
+        match = linkTargetRegex.exec(output);
+    }
 
     // Fix font color
-    output = output.replace(/<font color="([^"]+)">([^<]+)<\/font>/g, '$2');
+    const fontRegex = /<font color="([^"]+)">([^<]+)<\/font>/g;
+    match = fontRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], match[2]);
+        match = fontRegex.exec(output);
+    }
 
     return output;
 }
