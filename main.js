@@ -101,10 +101,10 @@ for (const [instance, communities] of Object.entries(instances)) {
 
 // Log in
 const bot = new LemmyBot.LemmyBot({
-    instance: process.env.INSTANCE,
+    instance: process.env.LEMMY_INSTANCE,
     credentials: {
-        username: process.env.USERNAME,
-        password: process.env.PASSWORD,
+        username: process.env.LEMMY_USERNAME,
+        password: process.env.LEMMY_PASSWORD,
     },
     dbFile: 'db.sqlite3',
     federation: {
@@ -120,7 +120,7 @@ const bot = new LemmyBot.LemmyBot({
                 botActions: { featurePost },
             }) => {
                 // Pin post if its by the bot and set to be pinned
-                if (creator.name == process.env.USERNAME) {
+                if (creator.name == process.env.LEMMY_USERNAME) {
                     // get link from db. If pin days > 0 then pin
                     db.all(`SELECT * FROM posts WHERE link = ?`, [post.url], async (err, rows) => {
                         if (err) {
