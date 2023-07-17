@@ -13,7 +13,7 @@ let parser = new Parser({
 });
 console.log(`${chalk.magenta('STARTED:')} Started Bot`)
 
-let { instances, feeds, markAsBot, postCheckInterval, dayCheckInterval, timezone, dayCutOff, stopPosts, showLogs } = load(readFileSync('config.yaml', 'utf8'));
+let { instances, feeds, markAsBot, postCheckInterval, dayCheckInterval, timezone, dayCutOff, stopPosts, showLogs, postSleepDuration, maxPosts } = load(readFileSync('config.yaml', 'utf8'));
 
 markAsBot = markAsBot ?? true;
 postCheckInterval = postCheckInterval ?? 10;
@@ -22,6 +22,8 @@ timezone = timezone ?? 'America/Toronto';
 dayCutOff = dayCutOff ?? 7;
 stopPosts = stopPosts ?? false;
 showLogs = showLogs ?? false;
+postSleepDuration = postSleepDuration ?? 2000;
+maxPosts = maxPosts ?? 5;
 
 log(`${chalk.grey('INSTANCES:')} ${Object.keys(instances).length} instances loaded.`)
 log(`${chalk.grey('FEEDS:')} ${Object.keys(feeds).length} feeds loaded.`)
@@ -82,9 +84,6 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
 
 // -----------------------------------------------------------------------------
 // Main Bot Code
-
-// Function for rate limits
-const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -202,6 +201,8 @@ const bot = new LemmyBot.LemmyBot({
                         }
                     });
 
+                    let donePosts = 0;
+
                     for (const item of commonItems) {
                         let pin_days = 0;
                         const itemDate = new Date((feed.datefield ? item[feed.datefield] : item.pubDate).trim());
@@ -232,6 +233,11 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const [instance, communities] of Object.entries(instances)) {
                                     for (const [community, value] of Object.entries(communities)) {
+                                        if (maxPosts != 0 && donePosts >= maxPosts) {
+                                            log(`${chalk.green('COMPLETE:')} Max posts reached.`);
+                                            return;
+                                        }
+
                                         if (Object.values(value).includes(name)) {
                                             log(`${chalk.grey('CREATING:')} post for link ${item.link} in ${community }`);
                                             const communityId = await getCommunityId({ name: community, instance: instance });
@@ -243,6 +249,7 @@ const bot = new LemmyBot.LemmyBot({
                                             body = parseTags(body);
 
                                             try {
+                                                donePosts++;
                                                 await createPost({
                                                     name: title,
                                                     body: body,
@@ -252,7 +259,7 @@ const bot = new LemmyBot.LemmyBot({
                                             } catch (e) {
                                                 console.error(e);
                                             }
-                                            await sleep(sleepDuration);
+                                            await sleep(postSleepDuration);
                                         }
                                     }
                                 }
@@ -331,6 +338,13 @@ let tags = {
     '<br/>': '\n',
     '<br />': '\n',
     '&nbsp;': ' ',
+    '<ol>': '',
+    '</ol>': '',
+    '<li>': '- ',
+    '</li>': '',
+    '<ul>': '',
+    '</ul>': '',
+    '&nbsp;': ' ',
 }
 
 function parseTags(input) {
@@ -338,6 +352,13 @@ function parseTags(input) {
     for (const [key, value] of Object.entries(tags)) {
         output = output.replace(key, value);
     }
+
+    // Fix links
+    output = output.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)');
+
+    // Fix font color
+    output = output.replace(/<font color="([^"]+)">([^<]+)<\/font>/g, '$2');
+
     return output;
 }
 

@@ -24,6 +24,12 @@ stopPosts: false
 # (Note I cant control log messages sent by the bot library so those will still show. Just ones thrown by the bot wont)
 showLogs: false
 
+# The maximum amount of posts it will do on every post check. Set to 0 for no limit. (Each post being posted to another instance is separate in here but itll finish up the same post before it stops)
+maxPosts: 5
+
+# The time in milliseconds it will sleep before doing another post in the same post check
+postSleepDuration: 5000
+
 
 # ------------------------------------------------------------------------------
 
