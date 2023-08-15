@@ -6,7 +6,7 @@ This bot is made for the https://programming.dev/ communities but the source cod
 ## Prerequisites
 - You need to have installed node.js or Docker in order to run the bot
 
-## Setup
+## Setup with Node.js (Option 1)
 1. Clone the repository
 2. Create an account in the instance you want the bot to have as its home (just make a regular user)
 3. Create a file called .env in the bot folder and give it values in this format with the data in the quotes (dont add the slashes or the part after the slashes)
@@ -22,7 +22,7 @@ I recommend installing something like [forever.js](https://www.npmjs.com/package
 
 If you run into issues feel free to dm me on Matrix [here](https://matrix.to/#/@ategon:matrix.org)
 
-## Setup with Docker
+## Setup with Docker (Option 2)
 1. Clone the repository
 2. Create an account in the instance you want the bot to have as its home (just make a regular user)
 3. Create a file called .env in the bot folder and give it values in this format with the data in the quotes (dont add the slashes or the part after the slashes)
