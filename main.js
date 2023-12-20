@@ -2,7 +2,9 @@ import LemmyBot from 'lemmy-bot';
 import chalk from 'chalk';
 import sqlite3 from 'sqlite3';
 import Parser from 'rss-parser';
+import { load } from 'js-yaml'
 import 'dotenv/config';
+import { readFileSync } from 'fs';
 
 let parser = new Parser({
     customFields: {
@@ -11,6 +13,27 @@ let parser = new Parser({
 });
 console.log(`${chalk.magenta('STARTED:')} Started Bot`)
 
+let { instances, feeds, markAsBot, postCheckInterval, dayCheckInterval, timezone, dayCutOff, stopPosts, showLogs, postSleepDuration, maxPosts } = load(readFileSync('config.yaml', 'utf8'));
+
+markAsBot = markAsBot ?? true;
+postCheckInterval = postCheckInterval ?? 10;
+dayCheckInterval = dayCheckInterval ?? 10;
+timezone = timezone ?? 'America/Toronto';
+dayCutOff = dayCutOff ?? 7;
+stopPosts = stopPosts ?? false;
+showLogs = showLogs ?? false;
+postSleepDuration = postSleepDuration ?? 2000;
+maxPosts = maxPosts ?? 5;
+
+log(`${chalk.grey('INSTANCES:')} ${Object.keys(instances).length} instances loaded.`)
+log(`${chalk.grey('FEEDS:')} ${Object.keys(feeds).length} feeds loaded.`)
+
+function log(message) {
+    if (showLogs) {
+        console.log(message);
+    }
+}
+
 // -----------------------------------------------------------------------------
 // Databases
 
@@ -18,19 +41,19 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
     if (err) {
         return console.error(err.message);
     }
-    console.log('Connected to the database.');
+    log(`${chalk.green('DB:')} Connected to the database.`);
 
     db.run(`CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         link TEXT NOT NULL UNIQUE,
         pin_days INTEGER NOT NULL DEFAULT 0,
-        message_id INTEGER,
+        post_id TEXT,
         featured INTEGER DEFAULT 0
     )`, (err) => {
         if (err) {
             return console.error(err.message);
         }
-        console.log('Loaded posts table.');
+        log(`${chalk.grey('TABLE:')} Loaded posts table.`);
     });
 
     db.run(`CREATE TABLE IF NOT EXISTS time (
@@ -40,7 +63,7 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
         if (err) {
             return console.error(err.message);
         }
-        console.log('Loaded time table');
+        log(`${chalk.grey('TABLE:')} Loaded time table`);
 
         db.run(`INSERT OR IGNORE INTO time (key, value) VALUES ('day', 0)`, (err) => {
             if (err) {
@@ -55,176 +78,33 @@ const db = new sqlite3.Database('mega.sqlite3', (err) => {
             return console.error(err.message);
         }
 
-        console.log(`${chalk.magenta('POSTS:')} ${rows[0].count} posts in database.`)
+        log(`${chalk.grey('POSTS:')} ${rows[0].count} posts in database.`)
     });
 });
 
 // -----------------------------------------------------------------------------
-// Data
-
-const communities = [
-    {
-        slug: 'localnews',
-        instance: 'tucson.social',
-        feeds: [
-            'tucsentinellocal',
-            'tucsoncomlocal',
-        ]
-    },
-    {
-        slug: 'tucsonpolitics',
-        instance: 'tucson.social',
-        feeds: [
-            'tucsentinelpol',
-            'tucsoncompol',
-        ]
-    },
-    {
-        slug: 'localsports',
-        instance: 'tucson.social',
-        feeds: [
-            'tucsoncomsports',
-        ]
-    },
-    {
-        slug: 'home',
-        instance: 'tucson.social',
-        feeds: [
-            'thisistucson',
-        ]
-    },
-
-]
-
-// Feed data is stored in the following format: 
-// joinfeeds will only include posts in common between the source feed and those in the list - It is processed first.
-// exclude will remove posts from the feed based on the contents of another feed - It is processed second.
-// pinCategories will pin posts in the feed that match the category name and are within the specified number of days
-// content is the name of the field in the feed that contains the post content. Defaults to 'summary' if not specified
-// datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
-//
-// const feeds = [
-//     {
-//         name: 'feedname',
-//         url: 'https://www.some-news-site.com/category/rss/news/',
-//         content: 'description',
-//         exclude: [
-//             'feedname2',  // the feed contains posts from feedname2, which we don't want. So we exclude feedname2 to get feedname only.
-//         ],
-//         joinfeeds: [
-//             'feedname3', // the feed contains posts from feedname3, which we want. So we join feedname3 to get feedname and feedname3.
-//         ],
-//         pinCategories: [
-//             { name: 'categoryname', days: 7 }, // the feed contains posts from categoryname, which we want. So we pin categoryname posts from the feed.
-//         ]
-//     },
-//     { 
-//         name: 'feedname2',
-//         url: 'https://www.some-news-site.com/category/rss/politics/',
-//         content: 'content'
-//     },
-//     {
-//         name: 'feedname3',
-//         url: 'https://www.some-news-site.com/category/rss/localnews/',
-//         content: 'content'
-//     }
-// ]
-
-const feeds = [
-    {
-        name: 'tucsentinellocal',
-        url: 'https://www.tucsonsentinel.com/category/rss/local/',
-        content: 'description',
-        datefield: 'dc:date',
-        exclude: [
-            'tucsentinelpol',  // the local feed contains politics, which we don't want. So we exclude the tucsentinelpol feed to get local news only.
-        ]
-    },
-    {
-        name: 'tucsentinelpol',
-        url: 'https://www.tucsonsentinel.com/category/rss/politics/',
-        content: 'description',
-        datefield: 'dc:date',
-        joinfeeds: [
-            'tucsentinellocal', // the politics feed contains national politics, which we don't want. So we join the local news feed to get local politics.
-        ]
-    },
-    {
-        name: 'tucsoncomlocal',
-        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local*&l=25&s=start_time&sd=desc',
-        content: 'description',
-        datefield: 'pubDate',
-        exclude: [
-            'tucsoncompol',
-            'tucsoncomsubscribersonly',
-            'tucsoncomsports',
-        ]
-    },
-    {
-        name: 'tucsoncompol',
-        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local/government-politics&l=25&s=start_time&sd=desc',
-        content: 'description',
-        datefield: 'pubDate',
-        exclude: [
-            'tucsoncomsubscribersonly',
-        ]
-    },
-    {
-        name: 'thisistucson',
-        url: 'https://thisistucson.com/search/?f=rss&t=article&c=thisistucson/todo&l=50&s=start_time&sd=desc',
-        content: 'description',
-        datefield: 'pubDate',
-    },
-    { 
-        name: 'tucsoncomsports',
-        url: 'https://tucson.com/search/?f=rss&t=article&c=sports/local&l=25&s=start_time&sd=desc',
-        content: 'description',
-        datefield: 'pubDate',
-        exclude: [
-            'tucsoncomsubscribersonly',
-        ]
-    },
-    {
-        name: 'tucsoncomsubscribersonly',
-        url: 'https://tucson.com/search/?f=rss&t=article&c=news/local/subscriber&l=25&s=start_time&sd=desc',
-        content: 'description',
-        datefield: 'pubDate',
-    }
-]
-
-const sleepDuration = process.env.RATE_LIMIT_MS || 2000;
-const dayLimit = process.env.DAY_LIMIT || 7;
+// Main Bot Code
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// -----------------------------------------------------------------------------
-// Main Bot Code
-
 // Create the list of communities the bot will be interacting in
 const allowList = []
 
-for (const community of communities) {
-    const allowListEntry = allowList.find((item) => item.instance == community.instance)
-
-    if (allowListEntry) {
-        allowListEntry.communities.push(community.slug)
-    }
-    else {
-        allowList.push({
-            instance: community.instance,
-            communities: [community.slug]
-        })
-    }
+for (const [instance, communities] of Object.entries(instances)) {
+    allowList.push({
+        instance: instance,
+        communities: Object.keys(communities)
+    })
 }
 
-
+// Log in
 const bot = new LemmyBot.LemmyBot({
-    instance: process.env.INSTANCE,
+    instance: process.env.LEMMY_INSTANCE,
     credentials: {
-        username: process.env.USERNAME,
-        password: process.env.PASSWORD,
+        username: process.env.LEMMY_USERNAME,
+        password: process.env.LEMMY_PASSWORD,
     },
     dbFile: 'db.sqlite3',
     federation: {
@@ -240,7 +120,7 @@ const bot = new LemmyBot.LemmyBot({
                 botActions: { featurePost },
             }) => {
                 // Pin post if its by the bot and set to be pinned
-                if (creator.name == process.env.USERNAME) {
+                if (creator.name == process.env.LEMMY_USERNAME) {
                     // get link from db. If pin days > 0 then pin
                     db.all(`SELECT * FROM posts WHERE link = ?`, [post.url], async (err, rows) => {
                         if (err) {
@@ -251,7 +131,14 @@ const bot = new LemmyBot.LemmyBot({
                             if (rows[0].featured) {
                                 // Pin post
                                 await featurePost({postId: post.id, featureType: "Community", featured: true})
-                                console.log(`${chalk.green('PINNED:')} Pinned ${post.name} in ${post.community_id} by ${creator.name}`)
+                                log(`${chalk.green('PINNED:')} Pinned ${post.name} in ${post.community_id} by ${creator.name}`)
+
+                                // Update post in db
+                                db.run(`UPDATE posts SET post_id = ? WHERE link = ?`, [post.id, post.url], (err) => {
+                                    if (err) {
+                                        return console.error(err.message);
+                                    }
+                                });
                             }
                         }
                     });
@@ -259,48 +146,42 @@ const bot = new LemmyBot.LemmyBot({
             }
         }
     },
+    markAsBot: markAsBot,
     schedule: [
         {
-            cronExpression: '0 */30 * * * *',
-            timezone: 'America/Phoenix',
-            runAtStart: true,
+            cronExpression: `0 */${postCheckInterval} * * * *`,
+            timezone: timezone,
             doTask: async ({getCommunityId, createPost}) => {
-                console.log(`${chalk.green('STARTED:')} RSS Feed Fetcher.`);
-                for (const feed of feeds) {
+                log(`${chalk.cyan('STARTED:')} RSS Feed Fetcher.`);
+                for (const [name, feed] of Object.entries(feeds)) {
                     const rss = await parser.parseURL(feed.url);
-                    // feed.customDayLimit ? feed.customDayLimit : daylimit
-                    
-                    const dateOffset = (24*60*60*1000) * (feed.customDayLimit !== undefined ? feed.customDayLimit : dayLimit);
-                    const cutoffDate = new Date();
-                    console.log(`${chalk.white('CURRENT DATE:')} ${cutoffDate}`);
-                    cutoffDate.setTime(cutoffDate.getTime() - dateOffset);  // set to dayLimit days ago via dateoffset
-                    console.log(`${chalk.white('CUTOFF DATE:')} ${cutoffDate}`);
 
+                    const cutoffDate = new Date();
+                    cutoffDate.setDate(cutoffDate.getDate() - dayCutOff);
 
                     let joinedItems = [];
                     // gather all items from feeds to be joined
                     if (feed.joinfeeds) {
-                        console.log(`${chalk.white('FETCHING:')} joining feeds for ${feed.name}`);
+                        log(`${chalk.grey('FETCHING:')} joining feeds for ${name}`);
                         for (const joinFeedName of feed.joinfeeds) {
-                            const joinFeed = feeds.find(f => f.name === joinFeedName);
+                            const joinFeed = Object.entries(feeds).find(f => f[0] === joinFeedName);
 
                             if (joinFeed) {
-                                const joinRss = await parser.parseURL(joinFeed.url);
+                                const joinRss = await parser.parseURL(joinFeed[1].url);
                                 joinedItems = joinedItems.concat(joinRss.items);
                             }
                         }
-                    }
+                    }    
 
                     let excludeItems = [];
-
                     // exclude feeds
                     if (feed.exclude) {
-                        console.log(`${chalk.white('FETCHING:')} exclusion feeds for ${feed.name}`);
+                        log(`${chalk.grey('FETCHING:')} exclusion feeds for ${name}`);
                         for (const excludeFeedName of feed.exclude) {
-                            const excludeFeed = feeds.find(f => f.name === excludeFeedName);
+                            const excludeFeed = Object.entries(feeds).find(f => f[0] === excludeFeedName);
                     
                             if (excludeFeed) {
-                                const excludeRss = await parser.parseURL(excludeFeed.url);
+                                const excludeRss = await parser.parseURL(excludeFeed[1].url);
                                 for (const excludeItem of excludeRss.items) {
                                     excludeItems.push(excludeItem.link);
                                 }
@@ -320,14 +201,13 @@ const bot = new LemmyBot.LemmyBot({
                         }
                     });
 
+                    let donePosts = 0;
+
                     for (const item of commonItems) {
                         let pin_days = 0;
                         const itemDate = new Date((feed.datefield ? item[feed.datefield] : item.pubDate).trim());
-                        console.log(`${chalk.white('ITEM DATE:')} ${itemDate}`);
-                        //if item is newer than 6 months old, continue
+                        //if item is newer than cutoff continue
                         if (itemDate > cutoffDate) { 
-                            console.log(`${chalk.green('RECENT:')} true`);
-                            console.log(`${chalk.white('LINK:')} ${item.link}`);
                             // if has categories then see if it's a pin
                             if (feed.pinCategories && item.categories) {
                                 for (const category of item.categories) {
@@ -342,40 +222,58 @@ const bot = new LemmyBot.LemmyBot({
                                 if (err) {
                                     if (err.message.includes('UNIQUE constraint failed')) {
                                         // do nothing
-                                        console.log(`${chalk.yellow('PRESENT:')} ${item.link} already present`);
                                         return;
                                     } else {
                                         return console.error(err.message);
                                     }
                                 }
-                                console.log(`${chalk.green('INSERTED:')} ${item.link} into database.`);
+                                log(`${chalk.yellow('INSERTED:')} ${item.link} into database.`);
 
-                                for (const community of communities) {
-                                    if (community.feeds.includes(feed.name)) {
-                                        console.log(`${chalk.green('CREATING:')} post for link ${item.link} in ${community.slug }`);
-                                        const communityId = await getCommunityId({ name: community.slug, instance: community.instance });
-                                        await createPost({
-                                            name: item.title,
-                                            body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-                                            url: item.link || undefined,
-                                            community_id: communityId,
-                                        });
-                                        await sleep(sleepDuration);
-                                        
+                                if (stopPosts) return;
+
+                                for (const [instance, communities] of Object.entries(instances)) {
+                                    for (const [community, value] of Object.entries(communities)) {
+                                        if (maxPosts != 0 && donePosts >= maxPosts) {
+                                            log(`${chalk.green('COMPLETE:')} Max posts reached.`);
+                                            return;
+                                        }
+
+                                        if (Object.values(value).includes(name)) {
+                                            log(`${chalk.grey('CREATING:')} post for link ${item.link} in ${community }`);
+                                            const communityId = await getCommunityId({ name: community, instance: instance });
+
+                                            let title = item.title;
+                                            title = parseTags(title);
+
+                                            let body = ((feed.content && feed.content === 'summary') ? item.summary : item.content);
+                                            body = parseTags(body);
+
+                                            try {
+                                                donePosts++;
+                                                await createPost({
+                                                    name: title,
+                                                    body: body,
+                                                    url: item.link || undefined,
+                                                    community_id: communityId,
+                                                });
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
+                                            await sleep(postSleepDuration);
+                                        }
                                     }
                                 }
-                                console.log(`${chalk.green('ADDED:')} ${item.link} for ${pin_days} days`);
                             });
                         }
                     
                     }
-                console.log(`${chalk.green('COMPLETE:')} Feed ${feed.name} processed.`);
+                    log(`${chalk.green('COMPLETE:')} Feed ${name} processed.`);
                 }
             }
         },
         {
-            cronExpression: '0 */15 * * * *',
-            timezone: 'America/Phoenix',
+            cronExpression: `0 */${dayCheckInterval} * * * *`,
+            timezone: 'America/Toronto',
             doTask: async ({ featurePost }) => {
                 const now = addMinutes(new Date(), 30);
                 const day = now.getDay();
@@ -392,14 +290,14 @@ const bot = new LemmyBot.LemmyBot({
                             }
                         });
 
-                        console.log(`${chalk.magenta('TIME:')} Updated day to ${day}`);
+                        log(`${chalk.magenta('TIME:')} Updated day to ${day}`);
                         // decrement all post times by 1
                         db.run(`UPDATE posts SET pin_days = pin_days - 1 WHERE featured = 1`, (err) => {
                             if (err) {
                                 return console.error(err.message);
                             }
 
-                            console.log(`${chalk.magenta('TIME:')} Decremented all post times`);
+                            log(`${chalk.magenta('TIME:')} Decremented all post times`);
 
                             // get all posts with 0 days left and unpin them
                             db.all(`SELECT * FROM posts WHERE pin_days = 0 && featured = 1`, async (err, rows) => {
@@ -409,7 +307,7 @@ const bot = new LemmyBot.LemmyBot({
 
                                 for (const row of rows) {
                                     await featurePost({postId: row.post_id, featureType: "Community", featured: false})
-                                    console.log(`${chalk.green('UNFEATURED:')} Unfeatured ${row.post_id} in ${row.community_id}`);
+                                    log(`${chalk.green('UNFEATURED:')} Unfeatured ${row.post_id}`);
                                 }
 
                                 // set all posts with 0 days left to unfeatured
@@ -418,7 +316,7 @@ const bot = new LemmyBot.LemmyBot({
                                         return console.error(err.message);
                                     }
 
-                                    console.log(`${chalk.magenta('TIME:')} Unfeatured all posts with 0 days left`);
+                                    log(`${chalk.magenta('TIME:')} Unfeatured all posts with 0 days left`);
                                 });
                             });
                         });
@@ -426,7 +324,61 @@ const bot = new LemmyBot.LemmyBot({
                 });
             }
         }
-    ]
+    ],
 });
+
+let tags = {
+    '<em>': '**',
+    '</em>': '**',
+    '<p>': '',
+    '</p>': '',
+    '<strong>': '**',
+    '</strong>': '**',
+    '<br>': '\n',
+    '<br/>': '\n',
+    '<br />': '\n',
+    '&nbsp;': ' ',
+    '<ol>': '',
+    '</ol>': '',
+    '<li>': '- ',
+    '</li>': '',
+    '<ul>': '',
+    '</ul>': '\n',
+    '&nbsp;': ' ',
+}
+
+function parseTags(input) {
+    let output = input;
+    for (const [key, value] of Object.entries(tags)) {
+        output = output.replaceAll(key, value);
+    }
+
+    // Fix Links
+    const linkRegex = /<a href="([^"]+)">([^<]+)<\/a>/g;
+    let match;
+    match = linkRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], `[${match[2]}](${match[1]})`);
+        match = linkRegex.exec(output);
+    }
+
+    // Fix Links target black
+    const linkTargetRegex = /<a href="([^"]+)" target="_blank">([^<]+)<\/a>/g;
+    match = linkTargetRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], `[${match[2]}](${match[1]})`);
+        match = linkTargetRegex.exec(output);
+    }
+
+    // Fix font color
+    const fontRegex = /<font color="([^"]+)">([^<]+)<\/font>/g;
+    match = fontRegex.exec(output);
+    while (match != null) {
+        output = output.replace(match[0], match[2]);
+        match = fontRegex.exec(output);
+    }
+
+    return output;
+}
 
 bot.start();

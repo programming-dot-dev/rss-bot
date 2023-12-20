@@ -1,0 +1,93 @@
+---
+# Whether to give the bot a bot tag (true) or not (false). Recommended to mark it but the option is here if you already 
+# marked it manually and it starts throwing user_already_exists errors
+markAsBot: true
+
+# How often to check for new posts in minutes
+postCheckInterval: 10
+
+# How often to check for a new day in minutes (for unpinning posts)
+dayCheckInterval: 10
+
+# The timezone to use for the bot (as reference for unpinning posts at midnight)
+# You can see the options here: https://www.inmotionhosting.com/support/website/tz-ref-table/
+timezone: 'America/Toronto'
+
+# Posts from how many days ago are you willing to backpost when the bot starts
+dayCutOff: 7
+
+# Set to true to add all posts to the db without posting them. Good to set for one run to clear out backposts if you 
+# dont want any old posts posted when the bot is first ran. Set to false to post normally
+stopPosts: false
+
+# Set to true if you want to see log messages. False if not
+# (Note I cant control log messages sent by the bot library so those will still show. Just ones thrown by the bot wont)
+showLogs: false
+
+# The maximum amount of posts it will do on every post check. Set to 0 for no limit. (Each post being posted to another instance is separate in here but itll finish up the same post before it stops)
+maxPosts: 5
+
+# The time in milliseconds it will sleep before doing another post in the same post check
+postSleepDuration: 5000
+
+
+# ------------------------------------------------------------------------------
+
+
+# The instances and communities used by the bot
+instances:
+  programming.dev: # The instance name
+    godot: # The community slug (value in url) in that instance
+      - "godot" # The feed to use (do a new line with a dash in front for each feed)
+
+    unreal_engine: # Another community in the instance
+      - "unreal"
+
+    unity:
+      - "unity"
+
+
+# The rss feeds used to pull posts from
+feeds:
+  godot: # The name of the feed (used in the instances section to mark feed to use)
+    url: 'https://godotengine.org/rss.xml'
+    pinCategories: # If a bot has a category section that lists this category, pin it for the amount of days
+      - Release: 7
+      - Pre-release: 7
+
+  unreal:
+    url: 'https://www.unrealengine.com/en-US/rss'
+    content: 'summary'
+
+  unity:
+    url: 'https://blogs.unity3d.com/feed/'
+
+
+# Additional possible values:
+# joinfeeds will only include posts in common between the source feed and those in the list - It is processed first
+# exclude will remove posts from the feed based on the contents of another feed - It is processed second.
+# pinCategories will pin posts in the feed that match the category name for the specified amount of days
+# content is the name of the field in the feed that contains the post content. Defaults to 'summary' if not specified
+# datefield is the name of the field in the feed that contains the post date. Defaults to 'pubDate' if not specified
+#
+# ---
+#
+# EXAMPLE
+#
+# feeds:
+#  example: # The name of the feed (used in the instances section to mark feed to use)
+#    url: 'https://example.com/rss'
+#    pinCategories: 
+#      - News: 7
+#    content: 'summary'
+#    datefield: 'pubDate'
+#    joinfeeds: 
+#      - 'example2' # the feed contains posts from example2, which we want. So we join example2 to get posts that are in both example and example2.
+#    exclude:
+#      - 'example3' # the feed contains posts from example3, which we don't want. So we exclude example3 to get posts that are in example only.
+# 
+#  example2:
+#    url: 'https://example.com/rss2'
+# 
+#  example3:
+#    url: 'https://example.com/rss3'

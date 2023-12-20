@@ -3,34 +3,33 @@ A lemmy bot that watches rss feeds and posts new posts from them in communities
 
 This bot is made for the https://programming.dev/ communities but the source code can be modified to accomodate any community
 
-## Notes
-- If running on windows the environment variables may act up. You can insert them manually into the bot by replacing the things like process.env.USERNAME and the other things starting with process.env with the value for username in .env or their other respective value
-- The lemmy bot api has not been updated for v0.18 so this bot will not work on v0.18 instances until thats done. Ill get it functioning as soon as its available
+## Prerequisites
+- You need to have installed node.js or Docker in order to run the bot
 
-
-## Setup
+## Setup with Node.js (Option 1)
 1. Clone the repository
 2. Create an account in the instance you want the bot to have as its home (just make a regular user)
 3. Create a file called .env in the bot folder and give it values in this format with the data in the quotes (dont add the slashes or the part after the slashes)
 ```
-INSTANCE="" // The instance the bot account is in
-USERNAME="" // The bot username
-PASSWORD="" // The bot password
+LEMMY_INSTANCE="" // The instance the bot account is in
+LEMMY_USERNAME="" // The bot username
+LEMMY_PASSWORD="" // The bot password
 ```
-4. Change the data for the communities and feeds variables based on what you want set.
-5. **IMPORTANT:** If you do not want to bot to back post any other posts it finds in the rss feeds, the first time you start up the bot you have to comment out the lines where it calls createPost. When you start up the bot it will insert them all into the database so it doesnt post again but as the create post is commented out it doesnt make a post. You should see a bunch of things appearing in the logs about adding new links (and it may take up to 10 minutes for the cycle to get to a time where it wants to post to start doing that). Then when its done uncomment then start the bot up again and it should behave normally.
- 
-The lines to comment out should look like this and to comment out just use /* to start the comment and */ to end it
-```
-await createPost({
-    name: item.title,
-    body: ((feed.content && feed.content === 'summary') ? item.summary : item.content),
-    url: item.link || undefined,
-    community_id: communityId,
-});
-```
-7. Open a terminal in the bot folder and run `npm install` to install dependendies and then `node main.js` to run the bot (whenever you want to start the bot again you can just do ctrl+c to interrupt the process and node main.js to start the bot)
+4. Change the data in config.yaml based on what you want set. Set the communities and feeds you want here
+5. Open a terminal in the bot folder and run `npm install` to install dependendies and then `node main.js` to run the bot (whenever you want to start the bot again you can just do ctrl+c to interrupt the process and node main.js to start the bot)
 
-I recommend installing something like [forever.js](https://www.npmjs.com/package/forever) for making it run continually
+I recommend installing something like [forever.js](https://www.npmjs.com/package/forever) which will make it start back up again if it errors at some point
 
 If you run into issues feel free to dm me on Matrix [here](https://matrix.to/#/@ategon:matrix.org)
+
+## Setup with Docker (Option 2)
+1. Clone the repository
+2. Create an account in the instance you want the bot to have as its home (just make a regular user)
+3. Create a file called .env in the bot folder and give it values in this format with the data in the quotes (dont add the slashes or the part after the slashes)
+```
+LEMMY_INSTANCE="" // The instance the bot account is in
+LEMMY_USERNAME="" // The bot username
+LEMMY_PASSWORD="" // The bot password
+```
+4. Change the data in config.yaml based on what you want set. Set the communities and feeds you want here
+5. In the project directory build the docker image by running `docker build -t <your name>/<desired_image_name>` and then launch a new container with `docker run <your name>/<desired_image_name>`
