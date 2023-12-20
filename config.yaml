@@ -1,5 +1,5 @@
 ---
-# Whether to give the bot a bot tag (true) or not (false). Recommended to mark it but the option is here if you already 
+# Whether to give the bot a bot tag (true) or not (false). Recommended to mark it but the option is here if you already
 # marked it manually and it starts throwing user_already_exists errors
 markAsBot: true
 
@@ -11,12 +11,12 @@ dayCheckInterval: 10
 
 # The timezone to use for the bot (as reference for unpinning posts at midnight)
 # You can see the options here: https://www.inmotionhosting.com/support/website/tz-ref-table/
-timezone: 'America/Toronto'
+timezone: "America/Toronto"
 
 # Posts from how many days ago are you willing to backpost when the bot starts
 dayCutOff: 7
 
-# Set to true to add all posts to the db without posting them. Good to set for one run to clear out backposts if you 
+# Set to true to add all posts to the db without posting them. Good to set for one run to clear out backposts if you
 # dont want any old posts posted when the bot is first ran. Set to false to post normally
 stopPosts: false
 
@@ -30,9 +30,7 @@ maxPosts: 5
 # The time in milliseconds it will sleep before doing another post in the same post check
 postSleepDuration: 5000
 
-
 # ------------------------------------------------------------------------------
-
 
 # The instances and communities used by the bot
 instances:
@@ -46,23 +44,20 @@ instances:
     unity:
       - "unity"
 
-
 # The rss feeds used to pull posts from
 feeds:
   godot: # The name of the feed (used in the instances section to mark feed to use)
-    url: 'https://godotengine.org/rss.xml'
+    url: "https://godotengine.org/rss.xml"
     pinCategories: # If a bot has a category section that lists this category, pin it for the amount of days
       - Release: 7
       - Pre-release: 7
 
   unreal:
-    url: 'https://www.unrealengine.com/en-US/rss'
-    content: 'summary'
+    url: "https://www.unrealengine.com/en-US/rss"
+    content: "summary"
 
   unity:
-    url: 'https://blogs.unity3d.com/feed/'
-
-
+    url: "https://blogs.unity3d.com/feed/"
 # Additional possible values:
 # joinfeeds will only include posts in common between the source feed and those in the list - It is processed first
 # exclude will remove posts from the feed based on the contents of another feed - It is processed second.
@@ -77,17 +72,17 @@ feeds:
 # feeds:
 #  example: # The name of the feed (used in the instances section to mark feed to use)
 #    url: 'https://example.com/rss'
-#    pinCategories: 
+#    pinCategories:
 #      - News: 7
 #    content: 'summary'
 #    datefield: 'pubDate'
-#    joinfeeds: 
+#    joinfeeds:
 #      - 'example2' # the feed contains posts from example2, which we want. So we join example2 to get posts that are in both example and example2.
 #    exclude:
 #      - 'example3' # the feed contains posts from example3, which we don't want. So we exclude example3 to get posts that are in example only.
-# 
+#
 #  example2:
 #    url: 'https://example.com/rss2'
-# 
+#
 #  example3:
 #    url: 'https://example.com/rss3'

@@ -13,7 +13,7 @@
     "dotenv": "^16.3.1",
     "fs": "^0.0.1-security",
     "js-yaml": "^4.1.0",
-    "lemmy-bot": "^0.4.5",
+    "lemmy-bot": "^0.5.1",
     "rss-parser": "^3.13.0",
     "sqlite3": "^5.1.6"
   },
