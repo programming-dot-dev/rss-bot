@@ -32,4 +32,4 @@ LEMMY_USERNAME="" // The bot username
 LEMMY_PASSWORD="" // The bot password
 ```
 4. Change the data in config.yaml based on what you want set. Set the communities and feeds you want here
-5. In the project directory build the docker image by running `docker build -t <your name>/<desired_image_name>` and then launch a new container with `docker run <your name>/<desired_image_name>`
+5. In the project directory build the docker image by running `docker build -t <your name>/<desired_image_name> .` and then launch a new container with `docker run <your name>/<desired_image_name>`
