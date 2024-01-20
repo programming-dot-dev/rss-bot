@@ -192,7 +192,14 @@ const bot = new LemmyBot.LemmyBot({
       doTask: async ({ botActions: { getCommunityId, createPost } }) => {
         log(`${chalk.cyan("STARTED:")} RSS Feed Fetcher.`);
         for (const [name, feed] of Object.entries(feeds)) {
-          const rss = await parser.parseURL(feed.url);
+          let rss;
+          try {
+            rss = await parser.parseURL(feed.url);
+          } catch (err) {
+            log(`SKIPPING: rss parse failed for ${name} with error ${err.message}`);
+            continue;
+          }
+
 
           const cutoffDate = new Date();
           cutoffDate.setDate(cutoffDate.getDate() - dayCutOff);
