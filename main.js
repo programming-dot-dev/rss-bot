@@ -6,13 +6,6 @@ import { load } from "js-yaml";
 import "dotenv/config";
 import { readFileSync } from "fs";
 
-let parser = new Parser({
-  customFields: {
-    item: ["image"],
-  },
-});
-console.log(`${chalk.magenta("STARTED:")} Started Bot`);
-
 let {
   instances,
   feeds,
@@ -25,6 +18,7 @@ let {
   showLogs,
   postSleepDuration,
   maxPosts,
+  parserOptions,
 } = load(readFileSync("config.yaml", "utf8"));
 
 markAsBot = markAsBot ?? true;
@@ -36,6 +30,15 @@ stopPosts = stopPosts ?? false;
 showLogs = showLogs ?? false;
 postSleepDuration = postSleepDuration ?? 2000;
 maxPosts = maxPosts ?? 5;
+parserOptions = parserOptions ?? {};
+
+let parser = new Parser({
+  customFields: {
+    item: ["image"],
+  },
+  ...parserOptions
+});
+console.log(`${chalk.magenta("STARTED:")} Started Bot`);
 
 log(
   `${chalk.grey("INSTANCES:")} ${

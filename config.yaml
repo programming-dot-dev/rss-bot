@@ -30,6 +30,14 @@ maxPosts: 5
 # The time in milliseconds it will sleep before doing another post in the same post check
 postSleepDuration: 5000
 
+# The options passed to rss-parser, our rss parsing library.
+# See their documentation for all options: https://www.npmjs.com/package/rss-parser#http-options
+# For example, to increase the timeout to 120000ms from the default 60000ms and set a custom User-Agent string
+parserOptions:
+  timeout: 120000
+  headers:
+    User-Agent: "Mozilla/5.0 (compatible; lemmy-mega-bot/1.0; +https://github.com/Ategon/Lemmy-Mega-Bot)"
+
 # ------------------------------------------------------------------------------
 
 # The instances and communities used by the bot
