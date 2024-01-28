@@ -316,6 +316,11 @@ const bot = new LemmyBot.LemmyBot({
                           name: community,
                           instance: instance,
                         });
+                        
+                        if (!communityId) {
+                            console.error(`Could not find community ${community} on instance ${instance}`);
+                            return;
+                        }
 
                         let title = item.title;
                         title = parseTags(title);
