@@ -1,3 +1,20 @@
+<div align="center">
+  
+![GitHub tag (latest SemVer)](https://img.shields.io/github/release/PangoraWeb/link-bot.svg?style=for-the-badge)
+[![GitHub issues](https://img.shields.io/github/issues-raw/PangoraWeb/link-bot.svg?style=for-the-badge)](https://github.com/PippitWeb/pippit/issues)
+[![License](https://img.shields.io/github/license/PangoraWeb/link-bot.svg?style=for-the-badge)](LICENSE)
+![GitHub stars](https://img.shields.io/github/stars/PangoraWeb/link-bot.svg?style=for-the-badge)
+
+</div>
+<div align="center">
+  <img src="https://github.com/PangoraWeb/link-bot/assets/73616169/6bdf131b-d311-4b2e-b0c8-1bf2e3464f0a" width=200px height=200px></img>
+  <h3 align="center"><a href="">Link Bot</a></h3>
+  <p align="center">
+
+    A bot for Pangora, Lemmy, and Sublinks that watches rss feeds and posts new posts from them in communities.
+  </p>
+</div>
+
 # Mega Bot (Aka the megaphone bot)
 A lemmy bot that watches rss feeds and posts new posts from them in communities 
 
