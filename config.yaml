@@ -88,7 +88,8 @@ feeds:
 #      - 'example2' # the feed contains posts from example2, which we want. So we join example2 to get posts that are in both example and example2.
 #    exclude:
 #      - 'example3' # the feed contains posts from example3, which we don't want. So we exclude example3 to get posts that are in example only.
-#
+#    nsfw: false # set to true if the feed is nsfw. Defaults to false if not specified
+# 
 #  example2:
 #    url: 'https://example.com/rss2'
 #

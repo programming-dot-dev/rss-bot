@@ -333,6 +333,7 @@ const bot = new LemmyBot.LemmyBot({
                             body: body,
                             url: item.link || undefined,
                             community_id: communityId,
+                            nsfw: feed.nsfw,
                           });
                         } catch (e) {
                           console.error(e);
