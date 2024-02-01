@@ -1,7 +1,6 @@
 <div align="center">
   
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/release/programming-dot-dev/rss-bot.svg?style=for-the-badge)
-[![GitHub issues](https://img.shields.io/github/issues-raw/programming-dot-dev/rss-bot.svg?style=for-the-badge)](https://github.com/PippitWeb/pippit/issues)
 [![License](https://img.shields.io/github/license/programming-dot-dev/rss-bot.svg?style=for-the-badge)](LICENSE)
 ![GitHub stars](https://img.shields.io/github/stars/programming-dot-dev/rss-bot.svg?style=for-the-badge)
 
