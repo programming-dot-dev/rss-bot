@@ -1,24 +1,22 @@
 <div align="center">
   
-![GitHub tag (latest SemVer)](https://img.shields.io/github/release/PangoraWeb/mega-bot.svg?style=for-the-badge)
-[![GitHub issues](https://img.shields.io/github/issues-raw/PangoraWeb/mega-bot.svg?style=for-the-badge)](https://github.com/PippitWeb/pippit/issues)
-[![License](https://img.shields.io/github/license/PangoraWeb/mega-bot.svg?style=for-the-badge)](LICENSE)
-![GitHub stars](https://img.shields.io/github/stars/PangoraWeb/mega-bot.svg?style=for-the-badge)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/release/programming-dot-dev/rss-bot.svg?style=for-the-badge)
+[![GitHub issues](https://img.shields.io/github/issues-raw/programming-dot-dev/rss-bot.svg?style=for-the-badge)](https://github.com/PippitWeb/pippit/issues)
+[![License](https://img.shields.io/github/license/programming-dot-dev/rss-bot.svg?style=for-the-badge)](LICENSE)
+![GitHub stars](https://img.shields.io/github/stars/programming-dot-dev/rss-bot.svg?style=for-the-badge)
 
 </div>
 <div align="center">
   <img src="https://github.com/PangoraWeb/link-bot/assets/73616169/6bdf131b-d311-4b2e-b0c8-1bf2e3464f0a" width=200px height=200px></img>
-  <h3 align="center"><a href="">Mega Bot</a></h3>
+  <h3 align="center"><a href="">RSS Bot</a></h3>
   <p align="center">
 
-    A bot for Pangora, Lemmy, and Sublinks that watches rss feeds and posts new posts from them in communities.
+    A bot for Lemmy and Sublinks that watches rss feeds and posts new posts from them in communities.
   </p>
 </div>
 
-# Mega Bot (Aka the megaphone bot)
-A lemmy bot that watches rss feeds and posts new posts from them in communities 
-
-This bot is made for the https://programming.dev/ communities but the source code can be modified to accomodate any community
+## About
+This is a bot that watches rss feeds and posts new posts from them in communities
 
 ## Prerequisites
 - You need to have installed node.js or Docker in order to run the bot
@@ -50,3 +48,6 @@ LEMMY_PASSWORD="" // The bot password
 ```
 4. Change the data in config.yaml based on what you want set. Set the communities and feeds you want here
 5. In the project directory build the docker image by running `docker build -t <your name>/<desired_image_name> .` and then launch a new container with `docker run <your name>/<desired_image_name>`
+
+# Other Bots
+[To be added]
