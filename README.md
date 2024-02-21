@@ -19,6 +19,7 @@ This is a bot that watches rss feeds and posts new posts from them in communitie
 
 ## Prerequisites
 - You need to have installed node.js or Docker in order to run the bot
+- The Lemmy instance **must run version 0.19.0 or newer**
 
 ## Setup with Node.js (Option 1)
 1. Clone the repository
